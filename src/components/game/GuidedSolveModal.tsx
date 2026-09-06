@@ -107,9 +107,11 @@ export const GuidedSolveModal: React.FC<GuidedSolveModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Active top calculations
-  const topIndex = liveStack.length - 1;
-  const currentTopVal = topIndex >= 0 ? liveStack[topIndex] : null;
+  // Active queue calculations
+  const frontIndex = liveStack.length > 0 ? 0 : -1;
+  const rearIndex = liveStack.length > 0 ? liveStack.length - 1 : -1;
+  const frontVal = frontIndex >= 0 ? liveStack[frontIndex] : null;
+  const rearVal = rearIndex >= 0 ? liveStack[rearIndex] : null;
 
   // =========================================================================
   // INTERACTION HANDLERS
@@ -188,7 +190,7 @@ export const GuidedSolveModal: React.FC<GuidedSolveModalProps> = ({
       status: 'correct',
       title: currentStep.correctFeedback.title,
       explanation: currentStep.correctFeedback.explanation,
-      actionResult: `PEEK returned: [${currentTopVal}]. (Stack contents unchanged)`,
+      actionResult: `PEEK returned: [${frontVal}]. (Queue contents unchanged)`,
     });
   };
 
@@ -335,7 +337,7 @@ export const GuidedSolveModal: React.FC<GuidedSolveModalProps> = ({
               ✓ GUIDED SOLVE COMPLETE!
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
-              You now understand how this Stack challenge operates step-by-step. Now apply what you learned and solve it
+              You now understand how this Queue challenge operates step-by-step. Now apply what you learned and solve it
               independently!
             </p>
           </div>
@@ -344,12 +346,12 @@ export const GuidedSolveModal: React.FC<GuidedSolveModalProps> = ({
           <div className="p-4 rounded-2xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/60 text-left space-y-2 text-xs text-slate-700 dark:text-slate-300">
             <div className="font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-amber-500" />
-              <span>Key Takeaway:</span>
+              <span>Key Takeaways:</span>
             </div>
             <ul className="space-y-1.5 text-[11px] list-disc list-inside text-slate-600 dark:text-slate-400">
-              <li>Stacks strictly follow <strong>LIFO</strong> (Last In, First Out).</li>
-              <li>Only the element at <strong>TOP</strong> can be popped or peeked.</li>
-              <li>Push always places the new element at the uppermost slot.</li>
+              <li>Queues strictly follow <strong>FIFO</strong> (First In, First Out).</li>
+              <li>Removals occur at <strong>FRONT</strong>, new arrivals join at <strong>REAR</strong>.</li>
+              <li><strong>PEEK</strong> inspects the FRONT element without altering the queue.</li>
             </ul>
           </div>
 
@@ -519,133 +521,92 @@ export const GuidedSolveModal: React.FC<GuidedSolveModalProps> = ({
           </p>
         </div>
 
-        {/* ─── 3. RECTANGULAR VERTICAL STACK VISUALIZATION ─── */}
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center bg-slate-50/80 dark:bg-slate-950/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
-          {/* Vertical Stack Drawing (Left / Center Column) */}
-          <div className="sm:col-span-6 flex flex-col items-center justify-center">
-            <div className="w-full max-w-[200px] flex flex-col items-center">
-              {/* TOP Indicator Arrow */}
-              <div className="h-9 flex flex-col items-center justify-center text-blue-600 dark:text-blue-400 font-mono text-xs font-black animate-bounce">
-                {liveStack.length > 0 ? (
-                  <div className="flex items-center gap-1">
-                    <span>TOP ({topIndex})</span>
-                    <ArrowDown className="w-3.5 h-3.5 stroke-[3]" />
-                  </div>
-                ) : (
-                  <span className="text-[11px] text-slate-400 font-sans font-bold">
-                    TOP = -1 (Empty)
+        {/* ─── 3. HORIZONTAL QUEUE PIPELINE VISUALIZATION ─── */}
+        <div className="space-y-3 bg-slate-50/80 dark:bg-slate-950/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+          {/* Header Row with Boundary Indicators */}
+          <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-500">
+            <span className="text-blue-600 dark:text-blue-400 flex items-center gap-1">
+              ← FRONT (Exit / Dequeue)
+            </span>
+            <span className="text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+              REAR (Entry / Enqueue) →
+            </span>
+          </div>
+
+          {/* Horizontal Conveyor Pipeline */}
+          <div className="grid grid-cols-5 gap-2 p-2 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 min-h-[72px] items-center">
+            {Array.from({ length: capacity }).map((_, slotIdx) => {
+              const itemVal = liveStack[slotIdx];
+              const isOccupied = slotIdx < liveStack.length;
+              const isFrontSlot = isOccupied && slotIdx === 0;
+              const isRearSlot = isOccupied && slotIdx === rearIndex;
+
+              return (
+                <div
+                  key={slotIdx}
+                  className={`h-14 rounded-xl border flex flex-col items-center justify-center p-1 font-mono transition-all ${
+                    isFrontSlot
+                      ? 'bg-blue-600 text-white border-blue-700 shadow-md ring-2 ring-blue-300 dark:ring-blue-800 scale-102'
+                      : isRearSlot
+                      ? 'bg-indigo-600 text-white border-indigo-700 shadow-md ring-2 ring-indigo-300 dark:ring-indigo-800 scale-102'
+                      : isOccupied
+                      ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-900 dark:text-blue-200 border-blue-300 dark:border-blue-800'
+                      : 'border-dashed border-slate-300 dark:border-slate-700/60 bg-transparent text-slate-400'
+                  }`}
+                >
+                  <span className="text-[10px] font-sans opacity-70">[{slotIdx}]</span>
+                  <span className="text-sm font-black">{isOccupied ? itemVal : '·'}</span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider">
+                    {isFrontSlot && isRearSlot ? 'FRONT/REAR' : isFrontSlot ? 'FRONT' : isRearSlot ? 'REAR' : isOccupied ? '' : 'FREE'}
                   </span>
-                )}
-              </div>
-
-              {/* Vertical Rectangular Stack Container */}
-              <div className="w-full border-2 border-t-0 border-slate-700 dark:border-slate-400 rounded-b-xl p-1.5 bg-slate-100 dark:bg-slate-900 flex flex-col-reverse gap-1.5 min-h-[160px] justify-start shadow-inner">
-                {Array.from({ length: capacity }).map((_, slotIdx) => {
-                  const itemVal = liveStack[slotIdx];
-                  const isOccupied = slotIdx < liveStack.length;
-                  const isTopSlot = isOccupied && slotIdx === topIndex;
-
-                  return (
-                    <div
-                      key={slotIdx}
-                      className={`h-9 w-full rounded-lg border flex items-center justify-between px-3 text-xs font-mono font-black transition-all ${
-                        isTopSlot
-                          ? 'bg-blue-600 text-white border-blue-700 shadow-md ring-2 ring-blue-300 dark:ring-blue-800 scale-[1.02]'
-                          : isOccupied
-                          ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-900 dark:text-blue-200 border-blue-300 dark:border-blue-800'
-                          : 'border-dashed border-slate-300 dark:border-slate-700/60 bg-transparent text-slate-400 dark:text-slate-600'
-                      }`}
-                    >
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-sans">
-                        [{slotIdx}]
-                      </span>
-                      <span className="text-sm font-bold">
-                        {isOccupied ? itemVal : '·'}
-                      </span>
-                      <span className="text-[10px] font-sans font-extrabold uppercase">
-                        {isTopSlot ? 'TOP' : isOccupied ? '' : 'FREE'}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Bottom Base Label */}
-              <div className="w-full text-center text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 pt-1">
-                Bottom (Index 0)
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Dynamic Stack Status & Feedback */}
-          <div className="sm:col-span-6 space-y-3">
-            {/* Status Attributes */}
-            <div className="grid grid-cols-2 gap-2 text-center">
-              <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <span className="text-[9px] font-bold text-slate-400 uppercase block">Size / Cap</span>
-                <span className="text-xs font-black font-mono text-slate-800 dark:text-slate-200">
-                  {liveStack.length} / {capacity}
-                </span>
-              </div>
-              <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <span className="text-[9px] font-bold text-slate-400 uppercase block">isEmpty</span>
-                <span
-                  className={`text-xs font-black font-mono ${
-                    liveStack.length === 0 ? 'text-emerald-500' : 'text-slate-400'
-                  }`}
-                >
-                  {liveStack.length === 0 ? 'TRUE' : 'FALSE'}
-                </span>
-              </div>
-              <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <span className="text-[9px] font-bold text-slate-400 uppercase block">isFull</span>
-                <span
-                  className={`text-xs font-black font-mono ${
-                    liveStack.length === capacity ? 'text-amber-500' : 'text-slate-400'
-                  }`}
-                >
-                  {liveStack.length === capacity ? 'TRUE' : 'FALSE'}
-                </span>
-              </div>
-              <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <span className="text-[9px] font-bold text-slate-400 uppercase block">Active TOP</span>
-                <span className="text-xs font-black font-mono text-blue-600 dark:text-blue-400">
-                  {currentTopVal !== null ? currentTopVal : 'None'}
-                </span>
-              </div>
-            </div>
-
-            {/* Displayed Output Area if Display operation is active */}
-            {displayedItems.length > 0 && (
-              <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 block">
-                  🖥️ Display Output (Top to Bottom):
-                </span>
-                <div className="flex items-center gap-1.5 flex-wrap font-mono text-xs font-bold text-emerald-800 dark:text-emerald-200">
-                  {displayedItems.map((val, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700"
-                    >
-                      {val}
-                    </span>
-                  ))}
                 </div>
-              </div>
-            )}
-
-            {/* Warning Animation Banner */}
-            {warningAnimation && (
-              <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 text-xs font-bold flex items-center gap-2 animate-pulse">
-                <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
-                <span>
-                  {warningAnimation === 'overflow'
-                    ? '⚠️ OVERFLOW: Cannot Push to full stack!'
-                    : '⚠️ UNDERFLOW: Cannot Pop empty stack!'}
-                </span>
-              </div>
-            )}
+              );
+            })}
           </div>
+
+          {/* Status Attributes */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center pt-1">
+            <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              <span className="text-[9px] font-bold text-slate-400 uppercase block">Size / Cap</span>
+              <span className="text-xs font-black font-mono text-slate-800 dark:text-slate-200">
+                {liveStack.length} / {capacity}
+              </span>
+            </div>
+            <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              <span className="text-[9px] font-bold text-slate-400 uppercase block">isEmpty</span>
+              <span
+                className={`text-xs font-black font-mono ${
+                  liveStack.length === 0 ? 'text-emerald-500' : 'text-slate-400'
+                }`}
+              >
+                {liveStack.length === 0 ? 'TRUE' : 'FALSE'}
+              </span>
+            </div>
+            <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              <span className="text-[9px] font-bold text-slate-400 uppercase block">Active FRONT</span>
+              <span className="text-xs font-black font-mono text-blue-600 dark:text-blue-400">
+                {frontVal !== null ? frontVal : 'None (-1)'}
+              </span>
+            </div>
+            <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              <span className="text-[9px] font-bold text-slate-400 uppercase block">Active REAR</span>
+              <span className="text-xs font-black font-mono text-indigo-600 dark:text-indigo-400">
+                {rearVal !== null ? rearVal : 'None (-1)'}
+              </span>
+            </div>
+          </div>
+
+          {/* Warning Animation Banner */}
+          {warningAnimation && (
+            <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 text-xs font-bold flex items-center gap-2 animate-pulse">
+              <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+              <span>
+                {warningAnimation === 'overflow'
+                  ? '⚠️ OVERFLOW: Cannot Enqueue into full queue!'
+                  : '⚠️ UNDERFLOW: Cannot Dequeue from empty queue!'}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* ─── 4. INTERACTIVE CHALLENGE / ACTION AREA ─── */}
@@ -701,21 +662,21 @@ export const GuidedSolveModal: React.FC<GuidedSolveModalProps> = ({
             </div>
           )}
 
-          {/* 4c. Interactive Push Action */}
+          {/* 4c. Interactive Enqueue Action */}
           {currentStep.interactionType === 'click-push' && (
             <div className="flex items-center gap-3">
               <button
                 onClick={() => handleClickPush()}
                 disabled={actionPerformed}
-                className="flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm uppercase bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                className="flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm uppercase bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
               >
                 <ArrowDown className="w-4 h-4" />
-                <span>[ PUSH {currentStep.pushValue || 40} ]</span>
+                <span>[ ENQUEUE {currentStep.pushValue || 'D'} AT REAR ]</span>
               </button>
             </div>
           )}
 
-          {/* 4d. Interactive Pop Action */}
+          {/* 4d. Interactive Dequeue Action */}
           {currentStep.interactionType === 'click-pop' && (
             <div className="flex items-center gap-3">
               <button
@@ -724,7 +685,7 @@ export const GuidedSolveModal: React.FC<GuidedSolveModalProps> = ({
                 className="flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm uppercase bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
               >
                 <ArrowRight className="w-4 h-4" />
-                <span>[ POP TOP ]</span>
+                <span>[ DEQUEUE FRONT {frontVal !== null ? `(${frontVal})` : ''} ]</span>
               </button>
             </div>
           )}
@@ -735,10 +696,10 @@ export const GuidedSolveModal: React.FC<GuidedSolveModalProps> = ({
               <button
                 onClick={() => handleClickPeek()}
                 disabled={actionPerformed}
-                className="flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm uppercase bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                className="flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm uppercase bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
               >
                 <Eye className="w-4 h-4" />
-                <span>[ PEEK TOP ELEMENT ]</span>
+                <span>[ PEEK FRONT ELEMENT ]</span>
               </button>
             </div>
           )}
@@ -752,7 +713,7 @@ export const GuidedSolveModal: React.FC<GuidedSolveModalProps> = ({
                 className="flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm uppercase bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
               >
                 <Layers className="w-4 h-4" />
-                <span>[ DISPLAY STACK ]</span>
+                <span>[ DISPLAY QUEUE ]</span>
               </button>
             </div>
           )}
@@ -766,7 +727,7 @@ export const GuidedSolveModal: React.FC<GuidedSolveModalProps> = ({
                 className="flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm uppercase bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
               >
                 <AlertTriangle className="w-4 h-4" />
-                <span>[ ATTEMPT PUSH 60 (CHECK OVERFLOW) ]</span>
+                <span>[ ATTEMPT ENQUEUE F (TEST OVERFLOW) ]</span>
               </button>
             </div>
           )}
@@ -777,10 +738,10 @@ export const GuidedSolveModal: React.FC<GuidedSolveModalProps> = ({
               <button
                 onClick={() => handleUnderflowAttempt()}
                 disabled={actionPerformed}
-                className="flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm uppercase bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                className="flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm uppercase bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
               >
                 <AlertTriangle className="w-4 h-4" />
-                <span>[ ATTEMPT POP (CHECK UNDERFLOW) ]</span>
+                <span>[ ATTEMPT DEQUEUE EMPTY QUEUE (TEST UNDERFLOW) ]</span>
               </button>
             </div>
           )}

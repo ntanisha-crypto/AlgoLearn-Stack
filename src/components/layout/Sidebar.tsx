@@ -41,11 +41,11 @@ export const Sidebar = forwardRef<HTMLElement, SidebarProps>(({
   }, [isOpen, onClose]);
 
   // Compute stats according to curriculum
-  const completedLearn = Math.min(12, progress.completedTheoryChapters?.length || 0);
+  const completedLearn = Math.min(20, progress.completedTheoryChapters?.length || 0);
   const completedLabs = Math.min(2, progress.completedLabs?.length || 0);
   const completedGames = Math.min(5, progress.completedGameLevels?.length || 0);
-  const totalActivities = 20;
-  const completedActivities = Math.min(20, completedLearn + completedLabs + completedGames + (progress.quizCompleted ? 1 : 0));
+  const totalActivities = 28;
+  const completedActivities = Math.min(28, completedLearn + completedLabs + completedGames + (progress.quizCompleted ? 1 : 0));
   const masteryPercentage = Math.round((completedActivities / totalActivities) * 100);
 
   const navItems: {
@@ -69,7 +69,7 @@ export const Sidebar = forwardRef<HTMLElement, SidebarProps>(({
       label: 'Learn',
       icon: BookOpen,
       badge: {
-        text: `${completedLearn}/12`,
+        text: `${completedLearn}/20`,
         bg: 'bg-blue-50 dark:bg-blue-950/70',
         color: 'text-blue-600 dark:text-blue-400',
       },
@@ -212,7 +212,7 @@ export const Sidebar = forwardRef<HTMLElement, SidebarProps>(({
           }`}
         >
           <div className="flex items-center justify-between text-xs mb-1.5">
-            <span className="font-semibold text-slate-700 dark:text-slate-300">Stack Curriculum</span>
+            <span className="font-semibold text-slate-700 dark:text-slate-300">Queue Curriculum</span>
             <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{masteryPercentage}%</span>
           </div>
           <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden mb-1.5">

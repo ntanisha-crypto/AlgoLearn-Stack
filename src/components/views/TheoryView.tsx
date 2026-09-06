@@ -27,17 +27,17 @@ import { THEORY_LESSONS } from '../../data/theoryData';
 import { soundEffects } from '../../services/sound';
 
 // Interactive Lesson Components
-import { InteractiveStackSandbox } from '../theory/InteractiveStackSandbox';
-import { InteractiveLifoDemo } from '../theory/InteractiveLifoDemo';
-import { InteractiveTopPointerDemo } from '../theory/InteractiveTopPointerDemo';
-import { InteractiveMiniOperationsLab } from '../theory/InteractiveMiniOperationsLab';
-import { InteractiveAlgorithmFlowchart } from '../theory/InteractiveAlgorithmFlowchart';
-import { InteractiveArrayStack } from '../theory/InteractiveArrayStack';
-import { InteractiveLinkedListStack } from '../theory/InteractiveLinkedListStack';
-import { InteractiveComplexityTable } from '../theory/InteractiveComplexityTable';
-import { InteractiveProblemSolvingSuite } from '../theory/InteractiveProblemSolvingSuite';
-import { InteractiveRealWorldCards } from '../theory/InteractiveRealWorldCards';
-import { InteractiveMasterSummary } from '../theory/InteractiveMasterSummary';
+import { InteractiveQueueSandbox } from '../theory/InteractiveQueueSandbox';
+import { InteractiveQueueFifoDemo } from '../theory/InteractiveQueueFifoDemo';
+import { InteractiveCircularQueueDemo } from '../theory/InteractiveCircularQueueDemo';
+import { InteractiveLinkedListQueueDemo } from '../theory/InteractiveLinkedListQueueDemo';
+import { InteractiveDequeDemo } from '../theory/InteractiveDequeDemo';
+import { InteractivePriorityQueueDemo } from '../theory/InteractivePriorityQueueDemo';
+import { InteractiveQueueBfsDemo } from '../theory/InteractiveQueueBfsDemo';
+import { InteractiveQueueComplexityTable } from '../theory/InteractiveQueueComplexityTable';
+import { InteractiveQueueApplicationsDemo } from '../theory/InteractiveQueueApplicationsDemo';
+import { InteractiveQueueDiagram } from '../theory/InteractiveQueueDiagram';
+import { InteractiveQueueSummary } from '../theory/InteractiveQueueSummary';
 
 interface TheoryViewProps {
   progress: UserProgress;
@@ -101,7 +101,7 @@ export const TheoryView: React.FC<TheoryViewProps> = ({
             ? [
                 {
                   title: `Completed Chapter ${currentChapter.chapterNumber || currentChapter.id}: ${currentChapter.title}`,
-                  description: `Finished topic in Theory of Stacks`,
+                  description: `Finished topic in Theory of Queues`,
                   xpEarned: xpEarned,
                   timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                 },
@@ -137,32 +137,41 @@ export const TheoryView: React.FC<TheoryViewProps> = ({
   // Helper to render interactive demo corresponding to current chapter
   const renderInteractiveDemo = (lesson: TheoryLesson) => {
     switch (lesson.interactiveDemoType) {
-      case 'push-pop-sandbox':
-        return <InteractiveStackSandbox initialItems={[10, 20, 30]} capacity={5} />;
+      case 'queue-sandbox':
+        return <InteractiveQueueSandbox capacity={5} />;
+      case 'queue-fifo':
       case 'lifo':
-        return <InteractiveLifoDemo />;
+        return <InteractiveQueueFifoDemo />;
+      case 'queue-pointers':
       case 'top-pointer':
-        return <InteractiveTopPointerDemo />;
-      case 'mini-operations':
-        return <InteractiveMiniOperationsLab />;
-      case 'algorithm-flowchart':
-        return <InteractiveAlgorithmFlowchart />;
-      case 'overflow-underflow':
-        return <InteractiveStackSandbox initialItems={[10, 20, 30]} capacity={3} />;
-      case 'array-stack':
-        return <InteractiveArrayStack />;
-      case 'linkedlist-stack':
-        return <InteractiveLinkedListStack />;
+        return <InteractiveQueueSandbox initialItems={[10, 20, 30]} capacity={5} highlightMode="enqueue" />;
+      case 'queue-enqueue':
+        return <InteractiveQueueSandbox initialItems={[10, 20]} capacity={5} highlightMode="enqueue" />;
+      case 'queue-dequeue':
+        return <InteractiveQueueSandbox initialItems={[10, 20, 30]} capacity={5} highlightMode="dequeue" />;
+      case 'queue-circular':
+        return <InteractiveCircularQueueDemo />;
+      case 'queue-linkedlist':
+        return <InteractiveLinkedListQueueDemo />;
+      case 'queue-deque':
+        return <InteractiveDequeDemo />;
+      case 'queue-priority':
+        return <InteractivePriorityQueueDemo />;
+      case 'queue-bfs':
+        return <InteractiveQueueBfsDemo />;
+      case 'queue-complexity':
       case 'complexity-table':
-        return <InteractiveComplexityTable />;
-      case 'problem-solving':
-        return <InteractiveProblemSolvingSuite />;
+        return <InteractiveQueueComplexityTable />;
+      case 'queue-real-world':
       case 'real-world':
-        return <InteractiveRealWorldCards />;
+        return <InteractiveQueueApplicationsDemo />;
+      case 'queue-diagram':
+        return <InteractiveQueueDiagram />;
+      case 'queue-summary':
       case 'quick-summary':
-        return <InteractiveMasterSummary />;
+        return <InteractiveQueueSummary />;
       default:
-        return <InteractiveStackSandbox initialItems={[10, 20, 30]} capacity={5} />;
+        return <InteractiveQueueSandbox capacity={5} />;
     }
   };
 
@@ -192,11 +201,11 @@ export const TheoryView: React.FC<TheoryViewProps> = ({
                 Visual DSA Learning Module
               </span>
               <span className="text-[11px] font-bold text-slate-400 font-mono">
-                12 Interactive Chapters
+                {totalChapters} Interactive Chapters
               </span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white uppercase font-mono">
-              THEORY OF STACKS & LIFO
+              THEORY OF QUEUES & FIFO
             </h1>
             <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
               Step-by-step visual lessons designed for high retention: <strong>Concept → Simple Explanation → Visual Diagram → Example → Interactive Demo → Key Takeaway</strong>.
@@ -246,7 +255,7 @@ export const TheoryView: React.FC<TheoryViewProps> = ({
             </span>
           </div>
           <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold shrink-0 ml-2">
-            {showMobileToc ? 'Close TOC' : 'View All 12 Chapters'}
+            {showMobileToc ? 'Close TOC' : `View All ${totalChapters} Chapters`}
           </span>
         </button>
 
@@ -301,7 +310,7 @@ export const TheoryView: React.FC<TheoryViewProps> = ({
             <div className="flex items-center gap-2">
               <ListOrdered className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               <span className="text-xs font-mono font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                Curriculum (12 Chapters)
+                Curriculum ({totalChapters} Chapters)
               </span>
             </div>
           </div>
@@ -621,7 +630,7 @@ export const TheoryView: React.FC<TheoryViewProps> = ({
                       <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block" />
                       <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block" />
                       <span className="text-[11px] text-slate-400 ml-2 font-mono">
-                        stack_{selectedLanguage}.{selectedLanguage === 'python' ? 'py' : selectedLanguage === 'java' ? 'java' : selectedLanguage === 'cpp' ? 'cpp' : 'c'}
+                        queue_{selectedLanguage}.{selectedLanguage === 'python' ? 'py' : selectedLanguage === 'java' ? 'java' : selectedLanguage === 'cpp' ? 'cpp' : 'c'}
                       </span>
                     </div>
 

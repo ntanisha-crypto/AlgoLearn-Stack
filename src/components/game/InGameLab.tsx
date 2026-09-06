@@ -6,7 +6,7 @@ import {
   Minus,
   Sparkles,
   RotateCcw,
-  ArrowUpRight,
+  ArrowRight,
   ArrowDownToLine,
   Eye,
   Shuffle,
@@ -26,12 +26,16 @@ import {
   ArrowUpDown,
   History,
   ShieldAlert,
+  LogIn,
+  LogOut,
+  Cpu,
+  Printer,
 } from 'lucide-react';
 import { StackItem, OperationLog, UserProgress } from '../../types';
-import { StackVisualizer } from '../common/StackVisualizer';
-import { PopZone } from './PopZone';
+import { QueueVisualizer } from '../common/QueueVisualizer';
+import { InteractiveQueueBoxes } from './InteractiveQueueBoxes';
+import { DequeueZone } from './DequeueZone';
 import { soundEffects } from '../../services/sound';
-import { awardXP } from '../../services/storage';
 
 interface InGameLabProps {
   progress: UserProgress;
@@ -51,25 +55,34 @@ export const InGameLab: React.FC<InGameLabProps> = ({
   onSelectLevel,
   hideHeader = false,
 }) => {
-  // Stack items
+  // Queue items (ordered index 0 = FRONT, last index = REAR)
   const [items, setItems] = useState<StackItem[]>([
-    { id: 'lab-init-1', value: 10, addedAt: Date.now() - 3000 },
-    { id: 'lab-init-2', value: 20, addedAt: Date.now() - 2000 },
-    { id: 'lab-init-3', value: 30, addedAt: Date.now() - 1000 },
+    { id: 'lab-init-1', value: 10, addedAt: Date.now() - 6000 },
+    { id: 'lab-init-2', value: 20, addedAt: Date.now() - 5000 },
+    { id: 'lab-init-3', value: 30, addedAt: Date.now() - 4000 },
+    { id: 'lab-init-4', value: 40, addedAt: Date.now() - 3000 },
+    { id: 'lab-init-5', value: 50, addedAt: Date.now() - 2000 },
+    { id: 'lab-init-6', value: 60, addedAt: Date.now() - 1000 },
   ]);
 
   // Capacity & sizing (range 2 to 20)
   const [capacity, setCapacity] = useState<number>(8);
   const [customInputValue, setCustomInputValue] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [searchResult, setSearchResult] = useState<{ found: boolean; index?: number; depth?: number; message?: string } | null>(null);
+  const [searchResult, setSearchResult] = useState<{
+    found: boolean;
+    index?: number;
+    depthFromFront?: number;
+    message?: string;
+  } | null>(null);
 
   // Peek highlight
   const [peekedValue, setPeekedValue] = useState<number | string | null>(null);
+  const [peekIndex, setPeekIndex] = useState<number | null>(null);
 
   // Visualizer representation mode
   const [visualMode, setVisualMode] = useState<'canister' | 'array' | 'experiments'>('canister');
-  const [activeExperiment, setActiveExperiment] = useState<'overflow' | 'underflow' | 'inversion' | 'brackets' | 'undo'>('overflow');
+  const [activeExperiment, setActiveExperiment] = useState<'overflow' | 'underflow' | 'fifo' | 'scheduler' | 'spooler'>('overflow');
 
   // Interactive feedback
   const [feedback, setFeedback] = useState<{
@@ -79,7 +92,7 @@ export const InGameLab: React.FC<InGameLabProps> = ({
   }>({
     type: 'info',
     title: 'In-Game Lab Active',
-    message: 'Welcome to the In-Game Stack Experimentation Lab! Adjust capacity, perform operations, and test stack behaviors.',
+    message: 'Welcome to the In-Game Queue Experimentation Lab! Adjust capacity, perform operations, and test FIFO queue behaviors.',
   });
 
   // Operation history logs
@@ -88,23 +101,34 @@ export const InGameLab: React.FC<InGameLabProps> = ({
       id: 'log-init',
       operation: 'CLEAR',
       success: true,
-      message: 'Stack initialized with [10, 20, 30] (Capacity: 8)',
+      message: 'Queue initialized with [10, 20, 30] (Capacity: 8)',
       timestamp: new Date(),
       stackSnapshot: [10, 20, 30],
     },
   ]);
 
-  // Bracket simulation state
-  const [bracketString, setBracketString] = useState<string>('{ [ ( ) ] }');
-  const [bracketStep, setBracketStep] = useState<number>(0);
-  const [bracketTokens, setBracketTokens] = useState<string[]>(['{', '[', '(', ')', ']', '}']);
-  const [bracketSimStack, setBracketSimStack] = useState<string[]>([]);
-  const [bracketSimMessage, setBracketSimMessage] = useState<string>('Click "Step Next" to trace bracket matching.');
+  // FIFO experiment sequence state
+  const [fifoQueue, setFifoQueue] = useState<string[]>(['Patient A', 'Patient B', 'Patient C', 'Patient D']);
+  const [fifoServed, setFifoServed] = useState<string[]>([]);
 
-  // Undo buffer simulation state
-  const [editorText, setEditorText] = useState<string>('Hello World');
-  const [undoStack, setUndoStack] = useState<string[]>(['H', 'He', 'Hel', 'Hell', 'Hello', 'Hello ']);
-  const [redoStack, setRedoStack] = useState<string[]>([]);
+  // CPU Round-Robin Scheduler experiment state
+  const [cpuQueue, setCpuQueue] = useState<{ pid: string; time: number }[]>([
+    { pid: 'P1', time: 6 },
+    { pid: 'P2', time: 4 },
+    { pid: 'P3', time: 8 },
+    { pid: 'P4', time: 3 },
+  ]);
+  const [currentCpuProcess, setCurrentCpuProcess] = useState<string | null>(null);
+  const [cpuCompleted, setCpuCompleted] = useState<string[]>([]);
+
+  // Print Spooler experiment state
+  const [spoolerQueue, setSpoolerQueue] = useState<string[]>([
+    'Quarterly_Report.pdf',
+    'HighRes_Design.png',
+    'Employee_Roster.xlsx',
+  ]);
+  const [activePrintingJob, setActivePrintingJob] = useState<string | null>(null);
+  const [printedJobs, setPrintedJobs] = useState<string[]>([]);
 
   // Log recorder helper
   const addLog = (
@@ -113,7 +137,7 @@ export const InGameLab: React.FC<InGameLabProps> = ({
     message: string,
     val?: number | string
   ) => {
-    const newItems = operation === 'POP' && success ? items.slice(0, -1) : items;
+    const newItems = operation === 'DEQUEUE' && success ? items.slice(1) : items;
     const newLog: OperationLog = {
       id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       operation,
@@ -137,14 +161,14 @@ export const InGameLab: React.FC<InGameLabProps> = ({
       setFeedback({
         type: 'warning',
         title: '⚠️ Capacity Decreased Below Current Size',
-        message: `Capacity changed to ${clamped}. Current stack had ${items.length} items. Top elements safely truncated to fit new capacity.`,
+        message: `Capacity changed to ${clamped}. Current queue had ${items.length} items. Rear elements safely truncated to fit new capacity.`,
       });
       setItems((prev) => prev.slice(0, clamped));
-      addLog('RESIZE', true, `Decreased capacity to ${clamped} (truncated top elements)`);
+      addLog('RESIZE', true, `Decreased capacity to ${clamped} (truncated rear elements)`);
     } else {
       setFeedback({
         type: 'info',
-        title: '📏 Stack Capacity Updated',
+        title: '📏 Queue Capacity Updated',
         message: `Capacity adjusted to ${clamped} slots. Free slots remaining: ${clamped - items.length}.`,
       });
       addLog('RESIZE', true, `Adjusted capacity to ${clamped}`);
@@ -153,15 +177,15 @@ export const InGameLab: React.FC<InGameLabProps> = ({
   };
 
   // ==========================================
-  // PUSH OPERATION
+  // ENQUEUE OPERATION (Adds to REAR)
   // ==========================================
-  const handlePush = (valToPush: number | string) => {
-    if (valToPush === '' || valToPush === undefined || valToPush === null) {
+  const handleEnqueue = (valToEnqueue: number | string) => {
+    if (valToEnqueue === '' || valToEnqueue === undefined || valToEnqueue === null) {
       soundEffects.playError();
       setFeedback({
         type: 'warning',
         title: 'Empty Value',
-        message: 'Please enter or select a value to push onto the stack.',
+        message: 'Please enter or select a value to enqueue into the queue.',
       });
       return;
     }
@@ -170,97 +194,127 @@ export const InGameLab: React.FC<InGameLabProps> = ({
       soundEffects.playError();
       setFeedback({
         type: 'error',
-        title: '⚠️ Stack Overflow Condition!',
-        message: `Cannot PUSH [${valToPush}]. Current size (${items.length}) equals maximum capacity (${capacity}). Stacks cannot exceed allocated space without resizing.`,
+        title: '⚠️ Queue Overflow Condition!',
+        message: `Cannot ENQUEUE [${valToEnqueue}]. Current size (${items.length}) equals maximum capacity (${capacity}). Queues cannot exceed allocated space without resizing.`,
       });
-      addLog('PUSH', false, `Stack Overflow! Failed to push [${valToPush}] at max capacity (${capacity})`, valToPush);
+      addLog('ENQUEUE', false, `Queue Overflow! Failed to enqueue [${valToEnqueue}] at max capacity (${capacity})`, valToEnqueue);
       return;
     }
 
     soundEffects.playPush();
     const newItem: StackItem = {
       id: `lab-item-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      value: valToPush,
+      value: valToEnqueue,
       addedAt: Date.now(),
     };
 
     setItems((prev) => [...prev, newItem]);
     setPeekedValue(null);
+    setPeekIndex(null);
     setSearchResult(null);
 
     setFeedback({
       type: 'success',
-      title: `✅ PUSH(${valToPush}) Executed`,
-      message: `Pushed [${valToPush}] onto the top of the stack (Index [${items.length}]). TOP pointer shifted up.`,
+      title: `✅ ENQUEUE(${valToEnqueue}) Executed`,
+      message: `Enqueued [${valToEnqueue}] at the REAR of the queue (Index [${items.length}]). REAR pointer shifted.`,
     });
-    addLog('PUSH', true, `Pushed [${valToPush}] onto top (index ${items.length})`, valToPush);
+    addLog('ENQUEUE', true, `Enqueued [${valToEnqueue}] at rear (index ${items.length})`, valToEnqueue);
   };
 
   // ==========================================
-  // POP OPERATION
+  // DEQUEUE OPERATION (Removes from FRONT)
   // ==========================================
-  const handlePop = () => {
+  const handleDequeue = () => {
     if (items.length === 0) {
       soundEffects.playError();
       setFeedback({
         type: 'error',
-        title: '⚠️ Stack Underflow Condition!',
-        message: 'Cannot POP from an empty stack! Attempting to remove elements when size is 0 produces Stack Underflow.',
+        title: '⚠️ Queue Underflow Condition!',
+        message: 'Cannot DEQUEUE from an empty queue! Attempting to remove elements when size is 0 produces Queue Underflow.',
       });
-      addLog('POP', false, 'Stack Underflow! Attempted to pop from empty stack');
+      addLog('DEQUEUE', false, 'Queue Underflow! Attempted to dequeue from empty queue');
       return;
     }
 
     soundEffects.playPop();
-    const poppedItem = items[items.length - 1];
-    setItems((prev) => prev.slice(0, -1));
+    const dequeuedItem = items[0];
+    setItems((prev) => prev.slice(1));
     setPeekedValue(null);
+    setPeekIndex(null);
     setSearchResult(null);
 
     setFeedback({
       type: 'success',
-      title: `✅ POP() Executed: [${poppedItem.value}]`,
-      message: `Removed topmost element [${poppedItem.value}] from index [${items.length - 1}]. Stack follows LIFO: newest element leaves first.`,
+      title: `✅ DEQUEUE() Executed: [${dequeuedItem.value}]`,
+      message: `Removed frontmost element [${dequeuedItem.value}] from index [0]. Queue follows FIFO: oldest arrival exits first.`,
     });
-    addLog('POP', true, `Popped [${poppedItem.value}] from top (index ${items.length - 1})`, poppedItem.value);
+    addLog('DEQUEUE', true, `Dequeued [${dequeuedItem.value}] from front (index 0)`, dequeuedItem.value);
   };
 
   // ==========================================
-  // PEEK OPERATION
+  // PEEK FRONT OPERATION
   // ==========================================
-  const handlePeek = () => {
+  const handlePeekFront = () => {
     if (items.length === 0) {
       soundEffects.playError();
       setFeedback({
         type: 'warning',
-        title: 'Stack is Empty',
-        message: 'PEEK() returns null (or throws EmptyStackException) because there are no elements in the stack.',
+        title: 'Queue is Empty',
+        message: 'PEEK FRONT returns null because there are no elements in the queue.',
       });
-      addLog('PEEK', false, 'PEEK failed on empty stack');
+      addLog('PEEK_FRONT', false, 'PEEK FRONT failed on empty queue');
       return;
     }
 
-    soundEffects.playClick();
-    const topItem = items[items.length - 1];
-    setPeekedValue(topItem.value);
+    soundEffects.playPeek();
+    const front = items[0];
+    setPeekedValue(front.value);
+    setPeekIndex(0);
     setFeedback({
       type: 'info',
-      title: `👁️ PEEK() Top Element: [${topItem.value}]`,
-      message: `Inspected TOP item [${topItem.value}] at index [${items.length - 1}]. Stack remains completely unmodified (O(1) time complexity).`,
+      title: `👁️ PEEK FRONT Element: [${front.value}]`,
+      message: `Inspected FRONT item [${front.value}] at index [0]. Queue remains completely unmodified (O(1) time complexity).`,
     });
-    addLog('PEEK', true, `Peeked top value: [${topItem.value}]`, topItem.value);
+    addLog('PEEK_FRONT', true, `Peeked front value: [${front.value}]`, front.value);
   };
 
   // ==========================================
-  // DUPLICATE (DUP) TOP
+  // PEEK REAR OPERATION
   // ==========================================
-  const handleDuplicateTop = () => {
+  const handlePeekRear = () => {
+    if (items.length === 0) {
+      soundEffects.playError();
+      setFeedback({
+        type: 'warning',
+        title: 'Queue is Empty',
+        message: 'PEEK REAR returns null because there are no elements in the queue.',
+      });
+      addLog('PEEK_REAR', false, 'PEEK REAR failed on empty queue');
+      return;
+    }
+
+    soundEffects.playPeek();
+    const rear = items[items.length - 1];
+    setPeekedValue(rear.value);
+    setPeekIndex(items.length - 1);
+    setFeedback({
+      type: 'info',
+      title: `👁️ PEEK REAR Element: [${rear.value}]`,
+      message: `Inspected REAR item [${rear.value}] at index [${items.length - 1}]. Most recently enqueued arrival.`,
+    });
+    addLog('PEEK_REAR', true, `Peeked rear value: [${rear.value}]`, rear.value);
+  };
+
+  // ==========================================
+  // DUPLICATE REAR (DUP)
+  // ==========================================
+  const handleDuplicateRear = () => {
     if (items.length === 0) {
       soundEffects.playError();
       setFeedback({
         type: 'warning',
         title: 'Cannot Duplicate',
-        message: 'Stack is empty. Push an element first to duplicate it.',
+        message: 'Queue is empty. Enqueue an element first to duplicate it.',
       });
       return;
     }
@@ -268,38 +322,38 @@ export const InGameLab: React.FC<InGameLabProps> = ({
       soundEffects.playError();
       setFeedback({
         type: 'error',
-        title: 'Stack Overflow on DUP',
-        message: `Cannot duplicate top item: Stack is already at maximum capacity (${capacity}).`,
+        title: 'Queue Overflow on DUP',
+        message: `Cannot duplicate rear item: Queue is already at maximum capacity (${capacity}).`,
       });
       return;
     }
 
     soundEffects.playPush();
-    const topVal = items[items.length - 1].value;
+    const rearVal = items[items.length - 1].value;
     const newItem: StackItem = {
       id: `lab-dup-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      value: topVal,
+      value: rearVal,
       addedAt: Date.now(),
     };
     setItems((prev) => [...prev, newItem]);
     setFeedback({
       type: 'success',
-      title: `🔄 DUP Executed: [${topVal}]`,
-      message: `Duplicated top element [${topVal}] and pushed an identical copy onto the top.`,
+      title: `🔄 DUP REAR Executed: [${rearVal}]`,
+      message: `Duplicated rear element [${rearVal}] and enqueued an identical copy at the REAR.`,
     });
-    addLog('PUSH', true, `Duplicated top item [${topVal}]`, topVal);
+    addLog('ENQUEUE', true, `Duplicated rear item [${rearVal}]`, rearVal);
   };
 
   // ==========================================
-  // SWAP TOP TWO
+  // SWAP FRONT TWO
   // ==========================================
-  const handleSwapTopTwo = () => {
+  const handleSwapFrontTwo = () => {
     if (items.length < 2) {
       soundEffects.playError();
       setFeedback({
         type: 'warning',
         title: 'Cannot Swap',
-        message: 'Stack must contain at least 2 elements to perform a SWAP operation.',
+        message: 'Queue must contain at least 2 elements to perform a SWAP operation.',
       });
       return;
     }
@@ -307,34 +361,64 @@ export const InGameLab: React.FC<InGameLabProps> = ({
     soundEffects.playClick();
     setItems((prev) => {
       const copy = [...prev];
-      const n = copy.length;
-      const temp = copy[n - 1];
-      copy[n - 1] = copy[n - 2];
-      copy[n - 2] = temp;
+      const temp = copy[0];
+      copy[0] = copy[1];
+      copy[1] = temp;
       return copy;
     });
 
-    const topVal = items[items.length - 1].value;
-    const secondVal = items[items.length - 2].value;
+    const firstVal = items[1].value;
+    const secondVal = items[0].value;
 
     setFeedback({
       type: 'success',
-      title: `🔀 SWAP Executed`,
-      message: `Exchanged top elements [${topVal}] and [${secondVal}]. New TOP is now [${secondVal}].`,
+      title: `🔀 SWAP FRONT TWO Executed`,
+      message: `Exchanged front elements. New FRONT is now [${firstVal}], followed by [${secondVal}].`,
     });
-    addLog('SWAP', true, `Swapped top two items: [${topVal}] <-> [${secondVal}]`);
+    addLog('SWAP', true, `Swapped front two items: [${secondVal}] <-> [${firstVal}]`);
   };
 
   // ==========================================
-  // REVERSE STACK
+  // CYCLE / ROTATE QUEUE (Round-Robin)
   // ==========================================
-  const handleReverseStack = () => {
+  const handleRotateQueue = () => {
+    if (items.length <= 1) {
+      soundEffects.playClick();
+      setFeedback({
+        type: 'info',
+        title: 'Rotate Unchanged',
+        message: 'Queue has 1 or 0 elements; cycling results in the identical queue.',
+      });
+      return;
+    }
+
+    soundEffects.playClick();
+    let rotatedVal: number | string = '';
+    setItems((prev) => {
+      const copy = [...prev];
+      const front = copy.shift()!;
+      rotatedVal = front.value;
+      copy.push(front);
+      return copy;
+    });
+    setFeedback({
+      type: 'info',
+      title: '🔁 Queue Cycled (Round-Robin)',
+      message: `Dequeued [${rotatedVal}] from FRONT and immediately enqueued it back to the REAR.`,
+    });
+    addLog('CYCLE', true, `Cycled front element [${rotatedVal}] to rear`);
+  };
+
+  // ==========================================
+  // REVERSE QUEUE
+  // ==========================================
+  const handleReverseQueue = () => {
     if (items.length <= 1) {
       soundEffects.playClick();
       setFeedback({
         type: 'info',
         title: 'Reverse Unchanged',
-        message: 'Stack has 1 or 0 elements; reversing results in the identical order.',
+        message: 'Queue has 1 or 0 elements; reversing results in the identical order.',
       });
       return;
     }
@@ -343,16 +427,16 @@ export const InGameLab: React.FC<InGameLabProps> = ({
     setItems((prev) => [...prev].reverse());
     setFeedback({
       type: 'success',
-      title: `🔃 Stack Reversal Executed`,
-      message: `Inverted the stack order. The old bottom is now the new TOP (demonstrating how 2 stacks reverse order).`,
+      title: `🔃 Queue Reversal Executed`,
+      message: `Inverted the queue order. The previous REAR is now at the FRONT.`,
     });
-    addLog('REVERSE', true, `Reversed entire stack ordering`);
+    addLog('REVERSE', true, `Reversed entire queue ordering`);
   };
 
   // ==========================================
-  // SORT STACK
+  // SORT QUEUE
   // ==========================================
-  const handleSortStack = (ascending: boolean = true) => {
+  const handleSortQueue = (ascending: boolean = true) => {
     if (items.length <= 1) return;
     soundEffects.playSuccess();
     setItems((prev) => {
@@ -372,34 +456,14 @@ export const InGameLab: React.FC<InGameLabProps> = ({
 
     setFeedback({
       type: 'success',
-      title: `📊 Stack Sorted (${ascending ? 'Ascending' : 'Descending'})`,
-      message: `Sorted stack elements using auxiliary stack sorting principles.`,
+      title: `📊 Queue Sorted (${ascending ? 'Ascending' : 'Descending'})`,
+      message: `Sorted queue elements while maintaining FIFO entry/exit boundaries.`,
     });
-    addLog('SORT', true, `Sorted stack ${ascending ? 'Ascending' : 'Descending'}`);
+    addLog('SORT', true, `Sorted queue ${ascending ? 'Ascending' : 'Descending'}`);
   };
 
   // ==========================================
-  // ROTATE STACK
-  // ==========================================
-  const handleRotateStack = () => {
-    if (items.length <= 1) return;
-    soundEffects.playClick();
-    setItems((prev) => {
-      const copy = [...prev];
-      const bottom = copy.shift()!;
-      copy.push(bottom);
-      return copy;
-    });
-    setFeedback({
-      type: 'info',
-      title: '🔁 Stack Rotated',
-      message: 'Moved bottommost element to the TOP of the stack.',
-    });
-    addLog('ROTATE', true, 'Rotated stack (bottom element moved to TOP)');
-  };
-
-  // ==========================================
-  // SEARCH STACK
+  // SEARCH QUEUE
   // ==========================================
   const handleSearchValue = () => {
     if (!searchQuery.trim()) {
@@ -410,7 +474,7 @@ export const InGameLab: React.FC<InGameLabProps> = ({
     const queryNum = Number(searchQuery);
     let foundIndex = -1;
 
-    for (let i = items.length - 1; i >= 0; i--) {
+    for (let i = 0; i < items.length; i++) {
       if (!isNaN(queryNum) && Number(items[i].value) === queryNum) {
         foundIndex = i;
         break;
@@ -422,29 +486,29 @@ export const InGameLab: React.FC<InGameLabProps> = ({
 
     if (foundIndex !== -1) {
       soundEffects.playSuccess();
-      const depthFromTop = items.length - 1 - foundIndex;
+      const depthFromFront = foundIndex;
       setSearchResult({
         found: true,
         index: foundIndex,
-        depth: depthFromTop,
-        message: `Value [${searchQuery}] found at index [${foundIndex}] (${depthFromTop === 0 ? 'at TOP' : `${depthFromTop} pops below TOP`}).`,
+        depthFromFront,
+        message: `Value [${searchQuery}] found at index [${foundIndex}] (${depthFromFront === 0 ? 'at FRONT (next to be served)' : `${depthFromFront} dequeues away from FRONT`}).`,
       });
       setFeedback({
         type: 'success',
         title: `🔍 Element Found: [${searchQuery}]`,
-        message: `Element exists in stack at index [${foundIndex}]. To access it natively in LIFO, you would need ${depthFromTop} pop() operations.`,
+        message: `Element is at index [${foundIndex}]. In FIFO order, ${depthFromFront} dequeue operation${depthFromFront === 1 ? '' : 's'} precede it.`,
       });
       addLog('SEARCH', true, `Searched for [${searchQuery}]: Found at index ${foundIndex}`, searchQuery);
     } else {
       soundEffects.playError();
       setSearchResult({
         found: false,
-        message: `Value [${searchQuery}] was not found in the stack.`,
+        message: `Value [${searchQuery}] was not found in the queue.`,
       });
       setFeedback({
         type: 'warning',
         title: `🔍 Element Not Found`,
-        message: `Value [${searchQuery}] does not exist in the current stack.`,
+        message: `Value [${searchQuery}] does not exist in the current queue.`,
       });
       addLog('SEARCH', false, `Searched for [${searchQuery}]: Not found`, searchQuery);
     }
@@ -453,7 +517,7 @@ export const InGameLab: React.FC<InGameLabProps> = ({
   // ==========================================
   // BATCH GENERATORS
   // ==========================================
-  const handleBatchPush = (preset: 'seq' | 'fib' | 'random' | 'fill') => {
+  const handleBatchEnqueue = (preset: 'seq' | 'fib' | 'random' | 'fill') => {
     soundEffects.playSuccess();
     let valuesToAdd: number[] = [];
 
@@ -473,7 +537,7 @@ export const InGameLab: React.FC<InGameLabProps> = ({
         setFeedback({
           type: 'warning',
           title: 'Already Full',
-          message: `Stack is already at full capacity (${capacity}/${capacity}).`,
+          message: `Queue is already at full capacity (${capacity}/${capacity}).`,
         });
         return;
       }
@@ -488,8 +552,8 @@ export const InGameLab: React.FC<InGameLabProps> = ({
     if (canAdd.length === 0) {
       setFeedback({
         type: 'error',
-        title: 'Stack Capacity Full',
-        message: 'Cannot batch push: No available slots remaining. Increase capacity first.',
+        title: 'Queue Capacity Full',
+        message: 'Cannot batch enqueue: No available slots remaining. Increase capacity first.',
       });
       return;
     }
@@ -503,29 +567,31 @@ export const InGameLab: React.FC<InGameLabProps> = ({
     setItems((prev) => [...prev, ...newItems]);
     setFeedback({
       type: 'success',
-      title: `⚡ Batch Pushed ${canAdd.length} Element${canAdd.length > 1 ? 's' : ''}`,
-      message: `Pushed [${canAdd.join(', ')}] onto the stack.`,
+      title: `⚡ Batch Enqueued ${canAdd.length} Element${canAdd.length > 1 ? 's' : ''}`,
+      message: `Enqueued [${canAdd.join(', ')}] at the REAR of the queue.`,
     });
-    addLog('BATCH_PUSH', true, `Batch pushed [${canAdd.join(', ')}]`);
+    addLog('BATCH_ENQUEUE', true, `Batch enqueued [${canAdd.join(', ')}]`);
   };
 
-  // Clear Stack
-  const handleClearStack = () => {
+  // Clear Queue
+  const handleClearQueue = () => {
     soundEffects.playClick();
     setItems([]);
     setPeekedValue(null);
     setSearchResult(null);
     setFeedback({
       type: 'info',
-      title: '🗑️ Stack Cleared',
-      message: 'All elements removed. Stack is now empty (Size: 0).',
+      title: '🗑️ Queue Cleared',
+      message: 'All elements removed. Queue is now empty (Size: 0).',
     });
-    addLog('CLEAR', true, 'Cleared all elements from stack');
+    addLog('CLEAR', true, 'Cleared all elements from queue');
   };
 
-  // Top Item Helpers
-  const topItem = items.length > 0 ? items[items.length - 1] : null;
-  const topValue = topItem ? topItem.value : null;
+  // Queue Pointer Helpers
+  const frontItem = items.length > 0 ? items[0] : null;
+  const frontValue = frontItem ? frontItem.value : null;
+  const rearItem = items.length > 0 ? items[items.length - 1] : null;
+  const rearValue = rearItem ? rearItem.value : null;
   const isFull = items.length >= capacity;
   const isEmpty = items.length === 0;
   const fullnessPercent = Math.round((items.length / capacity) * 100);
@@ -533,7 +599,7 @@ export const InGameLab: React.FC<InGameLabProps> = ({
   return (
     <div className="space-y-6 pb-12 max-w-5xl mx-auto">
       {/* ========================================== */}
-      {/* 1. TOP HEADER & NAVIGATION BAR (Only in standalone mode) */}
+      {/* 1. TOP HEADER & NAVIGATION BAR */}
       {/* ========================================== */}
       {!hideHeader && (
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -548,10 +614,10 @@ export const InGameLab: React.FC<InGameLabProps> = ({
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
               <FlaskConical className="w-7 h-7 text-blue-600 dark:text-blue-400" />
-              Stack Experimentation Lab
+              Queue Experimentation Lab
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
-              Experiment freely: dynamically resize capacity, push custom data, test LIFO boundaries, and run algorithms.
+              Experiment freely: dynamically resize capacity, enqueue custom data at the REAR, test FIFO boundaries, and run algorithms.
             </p>
           </div>
 
@@ -581,10 +647,10 @@ export const InGameLab: React.FC<InGameLabProps> = ({
             </div>
             <div>
               <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                Dynamic Stack Capacity & Sizing
+                Dynamic Queue Capacity & Sizing
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Increase or decrease stack capacity to test overflow barriers and memory allocation.
+                Increase or decrease queue capacity to test overflow barriers and buffer allocation.
               </p>
             </div>
           </div>
@@ -593,7 +659,7 @@ export const InGameLab: React.FC<InGameLabProps> = ({
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-slate-400 uppercase">Current Sizing:</span>
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800 font-mono font-black text-xs text-blue-700 dark:text-blue-300">
-              <span>{items.length} Used</span>
+              <span>{items.length} Enqueued</span>
               <span className="text-blue-400">/</span>
               <span>{capacity} Max Slots</span>
             </div>
@@ -671,12 +737,12 @@ export const InGameLab: React.FC<InGameLabProps> = ({
             <div className="flex items-center gap-2">
               {isFull && (
                 <span className="text-[10px] font-black uppercase text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/80 px-2 py-0.5 rounded-md border border-red-200 dark:border-red-800 flex items-center gap-1">
-                  <ShieldAlert className="w-3 h-3" /> Stack Full (Overflow Guard Active)
+                  <ShieldAlert className="w-3 h-3" /> Queue Full (Overflow Guard Active)
                 </span>
               )}
               {isEmpty && (
                 <span className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/80 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-800">
-                  Empty Stack
+                  Empty Queue
                 </span>
               )}
               <span className="font-mono text-slate-700 dark:text-slate-300">
@@ -706,7 +772,7 @@ export const InGameLab: React.FC<InGameLabProps> = ({
       {/* 3. OPERATIONS & EXPERIMENT DECK */}
       {/* ========================================== */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Visualizer Canister or Memory Representation (7 Cols) */}
+        {/* Left Column: Queue Diagram / Visualizer or Memory Representation (7 Cols) */}
         <div className="lg:col-span-7 space-y-4">
           {/* Mode Switcher Tabs */}
           <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
@@ -750,9 +816,9 @@ export const InGameLab: React.FC<InGameLabProps> = ({
 
             {/* Clear Button */}
             <button
-              onClick={handleClearStack}
+              onClick={handleClearQueue}
               disabled={isEmpty}
-              title="Clear Stack"
+              title="Clear Queue"
               className="px-2.5 py-1 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1 cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -760,40 +826,44 @@ export const InGameLab: React.FC<InGameLabProps> = ({
             </button>
           </div>
 
-          {/* Tab 1: Vertical Stack Canister Visualizer */}
+          {/* Tab 1: Interactive Queue Boxes Visualizer with Dynamic FRONT & REAR Pointers */}
           {visualMode === 'canister' && (
             <div className="space-y-4">
               <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm relative">
-                <StackVisualizer
+                <InteractiveQueueBoxes
                   items={items}
                   capacity={capacity}
                   peekValue={peekedValue}
-                  onDropItem={(val) => handlePush(val)}
-                  onPopTop={handlePop}
-                  allowDragPop={true}
-                  customEmptyMessage="Empty stack. Enter a value below or click a quick-chip to PUSH."
+                  peekIndex={peekIndex}
+                  isPeekActive={peekedValue !== null}
+                  onEnqueue={handleEnqueue}
+                  onDequeue={handleDequeue}
+                  onPeekFront={handlePeekFront}
+                  onClearQueue={handleClearQueue}
+                  onDropItem={(val) => handleEnqueue(val)}
+                  statusLabel="QUEUE STATUS"
                 />
               </div>
 
-              {/* Interactive Pop Zone */}
+              {/* Interactive FIFO Dequeue Zone */}
               <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
-                    LIFO POP ZONE (DROP TARGET)
+                    FIFO DEQUEUE ZONE (SERVICE EXIT)
                   </span>
                   <span className="text-[11px] text-slate-400 font-medium">
-                    Drag the top block here or click Pop
+                    Drag the front block here or click Dequeue
                   </span>
                 </div>
-                <PopZone
-                  topElementValue={topValue}
-                  onPopSuccess={handlePop}
-                  onPopInvalid={() => {
+                <DequeueZone
+                  frontElementValue={frontValue}
+                  onDequeueSuccess={handleDequeue}
+                  onDequeueInvalid={() => {
                     soundEffects.playError();
                     setFeedback({
                       type: 'error',
-                      title: 'Non-Top Access Prohibited',
-                      message: 'Only the TOP element can be dragged into the POP Zone.',
+                      title: 'Non-Front Access Prohibited',
+                      message: 'Only the FRONT element can be dragged into the Dequeue Zone (FIFO).',
                     });
                   }}
                   disabled={isEmpty}
@@ -819,23 +889,40 @@ export const InGameLab: React.FC<InGameLabProps> = ({
                 <div className="flex gap-2 min-w-max">
                   {Array.from({ length: capacity }).map((_, idx) => {
                     const item = items[idx];
-                    const isTop = idx === items.length - 1;
+                    const isFront = idx === 0 && items.length > 0;
+                    const isRear = idx === items.length - 1 && items.length > 0;
                     const isAllocated = idx < items.length;
+                    const isPeeked =
+                      isAllocated &&
+                      ((peekIndex !== null && peekIndex === idx) ||
+                        (peekedValue !== null && String(item?.value) === String(peekedValue) && (isFront || isRear)));
 
                     return (
                       <div
                         key={idx}
-                        className={`w-16 flex flex-col items-center rounded-2xl p-2.5 border transition-all ${
-                          isTop
-                            ? 'bg-blue-600 text-white border-blue-500 ring-2 ring-blue-300 dark:ring-blue-900 shadow-md scale-105'
+                        className={`w-18 flex flex-col items-center rounded-2xl p-2.5 border transition-all ${
+                          isPeeked
+                            ? 'bg-blue-600 text-white border-blue-400 ring-4 ring-blue-300 dark:ring-blue-600 shadow-lg scale-105 z-10'
+                            : isFront
+                            ? 'bg-rose-500 text-white border-rose-400 ring-2 ring-rose-300 dark:ring-rose-900 shadow-md scale-105'
+                            : isRear
+                            ? 'bg-emerald-600 text-white border-emerald-500 ring-2 ring-emerald-300 dark:ring-emerald-900 shadow-md scale-105'
                             : isAllocated
                             ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white border-slate-300 dark:border-slate-700'
                             : 'bg-slate-50 dark:bg-slate-950/40 text-slate-300 dark:text-slate-700 border-dashed border-slate-200 dark:border-slate-800'
                         }`}
                       >
-                        {/* Top Indicator */}
-                        <span className="text-[9px] font-mono font-bold tracking-tight h-4">
-                          {isTop ? 'TOP (SP)' : ''}
+                        {/* Pointer Indicator */}
+                        <span className="text-[9px] font-mono font-bold tracking-tight h-4 text-center">
+                          {isPeeked
+                            ? '👁️ PEEK'
+                            : isFront && isRear
+                            ? 'FRONT/REAR'
+                            : isFront
+                            ? 'FRONT (H)'
+                            : isRear
+                            ? 'REAR (T)'
+                            : ''}
                         </span>
 
                         {/* Element Value */}
@@ -846,8 +933,12 @@ export const InGameLab: React.FC<InGameLabProps> = ({
                         {/* Slot Index */}
                         <span
                           className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md mt-1 ${
-                            isTop
-                              ? 'bg-blue-700 text-blue-100'
+                            isPeeked
+                              ? 'bg-blue-700 text-blue-100 font-bold'
+                              : isFront
+                              ? 'bg-rose-600 text-rose-100'
+                              : isRear
+                              ? 'bg-emerald-700 text-emerald-100'
                               : isAllocated
                               ? 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                               : 'bg-transparent text-slate-400 dark:text-slate-600'
@@ -869,8 +960,15 @@ export const InGameLab: React.FC<InGameLabProps> = ({
               {/* Memory Legend & Statistics */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
                 <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Stack Pointer</span>
-                  <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Front Pointer</span>
+                  <span className="font-mono font-bold text-rose-600 dark:text-rose-400">
+                    {items.length > 0 ? 'Index [0]' : 'NULL (-1)'}
+                  </span>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Rear Pointer</span>
+                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
                     {items.length > 0 ? `Index [${items.length - 1}]` : 'NULL (-1)'}
                   </span>
                 </div>
@@ -883,14 +981,7 @@ export const InGameLab: React.FC<InGameLabProps> = ({
                 </div>
 
                 <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Active Data</span>
-                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                    {items.length * 4} Bytes
-                  </span>
-                </div>
-
-                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">LIFO Integrity</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block">FIFO Integrity</span>
                   <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
                     100% Guarded
                   </span>
@@ -929,34 +1020,34 @@ export const InGameLab: React.FC<InGameLabProps> = ({
                     Underflow Test
                   </button>
                   <button
-                    onClick={() => setActiveExperiment('inversion')}
+                    onClick={() => setActiveExperiment('fifo')}
                     className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                      activeExperiment === 'inversion'
+                      activeExperiment === 'fifo'
                         ? 'bg-blue-600 text-white'
                         : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                     }`}
                   >
-                    LIFO Inversion
+                    FIFO Sequence
                   </button>
                   <button
-                    onClick={() => setActiveExperiment('brackets')}
+                    onClick={() => setActiveExperiment('scheduler')}
                     className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                      activeExperiment === 'brackets'
+                      activeExperiment === 'scheduler'
                         ? 'bg-blue-600 text-white'
                         : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                     }`}
                   >
-                    Parentheses Match
+                    CPU Scheduler
                   </button>
                   <button
-                    onClick={() => setActiveExperiment('undo')}
+                    onClick={() => setActiveExperiment('spooler')}
                     className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                      activeExperiment === 'undo'
+                      activeExperiment === 'spooler'
                         ? 'bg-blue-600 text-white'
                         : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                     }`}
                   >
-                    Undo/Redo
+                    Print Spooler
                   </button>
                 </div>
               </div>
@@ -966,10 +1057,10 @@ export const InGameLab: React.FC<InGameLabProps> = ({
                 <div className="space-y-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs">
                   <div className="flex items-center gap-2 text-red-600 dark:text-red-400 font-bold text-sm">
                     <ShieldAlert className="w-4 h-4" />
-                    <span>Experiment: Stack Overflow Trigger</span>
+                    <span>Experiment: Queue Overflow Trigger</span>
                   </div>
                   <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                    A Stack Overflow occurs when an algorithm calls <code className="bg-slate-200 dark:bg-slate-700 px-1 py-0.5 rounded font-mono font-bold">push()</code> on a stack that is already at maximum capacity.
+                    A Queue Overflow occurs when an algorithm calls <code className="bg-slate-200 dark:bg-slate-700 px-1 py-0.5 rounded font-mono font-bold">enqueue()</code> on a queue that is already at maximum capacity.
                   </p>
                   <div className="flex items-center gap-2 pt-1">
                     <button
@@ -982,19 +1073,19 @@ export const InGameLab: React.FC<InGameLabProps> = ({
                         ]);
                         setFeedback({
                           type: 'warning',
-                          title: 'Stack Filled to Capacity (3/3)',
-                          message: 'Click [+ PUSH(99)] below to trigger the Stack Overflow exception guard.',
+                          title: 'Queue Filled to Capacity (3/3)',
+                          message: 'Click [+ ENQUEUE(99)] below to trigger the Queue Overflow exception guard.',
                         });
                       }}
                       className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all cursor-pointer"
                     >
-                      Setup 3/3 Full Stack
+                      Setup 3/3 Full Queue
                     </button>
                     <button
-                      onClick={() => handlePush(99)}
+                      onClick={() => handleEnqueue(99)}
                       className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 font-bold rounded-xl text-slate-800 dark:text-white transition-all cursor-pointer"
                     >
-                      Attempt Push(99)
+                      Attempt Enqueue(99)
                     </button>
                   </div>
                 </div>
@@ -1005,196 +1096,246 @@ export const InGameLab: React.FC<InGameLabProps> = ({
                 <div className="space-y-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs">
                   <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-sm">
                     <AlertTriangle className="w-4 h-4" />
-                    <span>Experiment: Stack Underflow Trigger</span>
+                    <span>Experiment: Queue Underflow Trigger</span>
                   </div>
                   <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                    A Stack Underflow occurs when an algorithm calls <code className="bg-slate-200 dark:bg-slate-700 px-1 py-0.5 rounded font-mono font-bold">pop()</code> on an empty stack (Size: 0).
+                    A Queue Underflow occurs when an algorithm calls <code className="bg-slate-200 dark:bg-slate-700 px-1 py-0.5 rounded font-mono font-bold">dequeue()</code> on an empty queue (Size: 0).
                   </p>
                   <div className="flex items-center gap-2 pt-1">
                     <button
                       onClick={() => {
-                        handleClearStack();
+                        handleClearQueue();
                         setFeedback({
                           type: 'warning',
-                          title: 'Stack Cleared to 0',
-                          message: 'Click [Attempt POP()] to observe underflow safety handling.',
+                          title: 'Queue Cleared to 0',
+                          message: 'Click [Attempt DEQUEUE()] to observe underflow safety handling.',
                         });
                       }}
                       className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl transition-all cursor-pointer"
                     >
-                      Empty the Stack
+                      Empty the Queue
                     </button>
                     <button
-                      onClick={handlePop}
+                      onClick={handleDequeue}
                       className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 font-bold rounded-xl text-slate-800 dark:text-white transition-all cursor-pointer"
                     >
-                      Attempt POP()
+                      Attempt DEQUEUE()
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* Experiment 3: Inversion */}
-              {activeExperiment === 'inversion' && (
+              {/* Experiment 3: FIFO Sequence Preservation */}
+              {activeExperiment === 'fifo' && (
                 <div className="space-y-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs">
-                  <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold text-sm">
-                    <ArrowUpDown className="w-4 h-4" />
-                    <span>Experiment: LIFO Sequence Inversion</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold text-sm">
+                      <ArrowRight className="w-4 h-4" />
+                      <span>Experiment: FIFO Sequence Arrival Preservation</span>
+                    </div>
+                    <span className="font-mono text-slate-500 font-bold">
+                      Waiting: {fifoQueue.length} | Served: {fifoServed.length}
+                    </span>
                   </div>
                   <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                    By pushing elements in chronological order (A → B → C → D) and popping them sequentially, the original sequence naturally reverses (D → C → B → A).
+                    Unlike stacks which invert order, queues guarantee that elements leave in the exact chronological arrival order: First In, First Out (FIFO).
                   </p>
+
+                  <div className="flex items-center gap-2 overflow-x-auto py-1">
+                    <span className="text-[10px] font-bold uppercase text-slate-400">Queue:</span>
+                    {fifoQueue.length === 0 ? (
+                      <span className="text-slate-400 italic">All arrivals served!</span>
+                    ) : (
+                      fifoQueue.map((item, idx) => (
+                        <span
+                          key={idx}
+                          className={`px-2 py-1 rounded-lg font-mono font-bold text-xs border ${
+                            idx === 0
+                              ? 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800 ring-1 ring-rose-400'
+                              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                          }`}
+                        >
+                          {idx === 0 ? '👉 ' : ''}{item}
+                        </span>
+                      ))
+                    )}
+                  </div>
+
+                  {fifoServed.length > 0 && (
+                    <div className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400">
+                      Served in order: [{fifoServed.join(' → ')}]
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-2 pt-1">
                     <button
                       onClick={() => {
-                        handleSetCapacity(6);
-                        setItems([
-                          { id: '1', value: 1, addedAt: 1 },
-                          { id: '2', value: 2, addedAt: 2 },
-                          { id: '3', value: 3, addedAt: 3 },
-                          { id: '4', value: 4, addedAt: 4 },
-                        ]);
-                        setFeedback({
-                          type: 'info',
-                          title: 'Input Sequence Loaded: [1, 2, 3, 4]',
-                          message: 'Pop elements sequentially or click Reverse to observe LIFO inversion.',
-                        });
+                        setFifoQueue(['Patient A', 'Patient B', 'Patient C', 'Patient D']);
+                        setFifoServed([]);
+                        soundEffects.playClick();
                       }}
-                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all cursor-pointer"
+                      className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 font-bold rounded-xl text-slate-800 dark:text-white transition-all cursor-pointer"
                     >
-                      Load [1, 2, 3, 4]
+                      Reset Queue
                     </button>
                     <button
-                      onClick={handleReverseStack}
-                      className="px-3 py-1.5 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 hover:from-blue-800 hover:to-indigo-700 text-white font-bold rounded-xl transition-all cursor-pointer"
+                      onClick={() => {
+                        if (fifoQueue.length === 0) return;
+                        const next = fifoQueue[0];
+                        setFifoQueue((prev) => prev.slice(1));
+                        setFifoServed((prev) => [...prev, next]);
+                        soundEffects.playPop();
+                      }}
+                      disabled={fifoQueue.length === 0}
+                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white font-bold rounded-xl transition-all cursor-pointer"
                     >
-                      Reverse Stack
+                      Serve Next (Dequeue)
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* Experiment 4: Parentheses Matching */}
-              {activeExperiment === 'brackets' && (
+              {/* Experiment 4: Round-Robin CPU Scheduler */}
+              {activeExperiment === 'scheduler' && (
                 <div className="space-y-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm text-slate-900 dark:text-white">
-                      Token Stream: {bracketString}
-                    </span>
-                    <span className="font-mono text-blue-600 dark:text-blue-400 font-bold">
-                      Step {bracketStep}/{bracketTokens.length}
+                    <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold text-sm">
+                      <Cpu className="w-4 h-4" />
+                      <span>Experiment: Round-Robin CPU Task Queue</span>
+                    </div>
+                    <span className="font-mono text-indigo-600 dark:text-indigo-400 font-bold">
+                      Quantum = 3ms
                     </span>
                   </div>
+                  <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Operating systems use circular queue semantics: the FRONT task executes for 3ms. If unfinished, it is dequeued and placed at the REAR!
+                  </p>
 
-                  <div className="flex items-center gap-2">
-                    {bracketTokens.map((tok, idx) => (
-                      <span
-                        key={idx}
-                        className={`w-7 h-7 rounded-lg flex items-center justify-center font-mono font-black text-sm border ${
-                          idx === bracketStep
-                            ? 'bg-blue-600 text-white border-blue-500 ring-2 ring-blue-300 dark:ring-blue-900'
-                            : idx < bracketStep
-                            ? 'bg-slate-200 dark:bg-slate-700 text-slate-500 border-slate-300 dark:border-slate-600'
-                            : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700'
-                        }`}
-                      >
-                        {tok}
+                  <div className="flex items-center gap-2 overflow-x-auto py-1">
+                    {cpuQueue.length === 0 ? (
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                        All processes finished! CPU Idle.
                       </span>
+                    ) : (
+                      cpuQueue.map((proc, idx) => (
+                        <div
+                          key={proc.pid}
+                          className={`p-2 rounded-xl border font-mono flex flex-col items-center ${
+                            idx === 0
+                              ? 'bg-indigo-50 dark:bg-indigo-950/80 border-indigo-400 dark:border-indigo-600 text-indigo-900 dark:text-indigo-200 ring-2 ring-indigo-300'
+                              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200'
+                          }`}
+                        >
+                          <span className="font-black text-xs">{proc.pid}</span>
+                          <span className="text-[10px] opacity-70">{proc.time}ms left</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {currentCpuProcess && (
+                    <div className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono text-[11px] text-blue-600 dark:text-blue-400">
+                      {currentCpuProcess}
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      onClick={() => {
+                        if (cpuQueue.length === 0) return;
+                        const current = cpuQueue[0];
+                        const remaining = current.time - 3;
+                        soundEffects.playClick();
+
+                        if (remaining <= 0) {
+                          setCpuQueue((prev) => prev.slice(1));
+                          setCpuCompleted((prev) => [...prev, current.pid]);
+                          setCurrentCpuProcess(`Process ${current.pid} finished execution (0ms left) and exited CPU.`);
+                        } else {
+                          setCpuQueue((prev) => [...prev.slice(1), { pid: current.pid, time: remaining }]);
+                          setCurrentCpuProcess(`Process ${current.pid} ran 3ms (${remaining}ms remaining). Cycled to REAR of queue.`);
+                        }
+                      }}
+                      disabled={cpuQueue.length === 0}
+                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-bold rounded-xl transition-all cursor-pointer"
+                    >
+                      Run 3ms Quantum (Cycle)
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCpuQueue([
+                          { pid: 'P1', time: 6 },
+                          { pid: 'P2', time: 4 },
+                          { pid: 'P3', time: 8 },
+                          { pid: 'P4', time: 3 },
+                        ]);
+                        setCurrentCpuProcess(null);
+                        setCpuCompleted([]);
+                      }}
+                      className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 font-bold rounded-xl text-slate-800 dark:text-white transition-all cursor-pointer"
+                    >
+                      Reset Tasks
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Experiment 5: Print Spooler Buffer */}
+              {activeExperiment === 'spooler' && (
+                <div className="space-y-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
+                      <Printer className="w-4 h-4" />
+                      <span>Experiment: Printer Spooler Buffer</span>
+                    </div>
+                    <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+                      {spoolerQueue.length} jobs in buffer
+                    </span>
+                  </div>
+                  <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Spool buffers decouple fast document creators from slow physical hardware: print requests queue at the REAR and print sequentially from the FRONT.
+                  </p>
+
+                  <div className="space-y-1.5">
+                    {spoolerQueue.map((job, idx) => (
+                      <div
+                        key={idx}
+                        className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between font-mono text-xs"
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full ${idx === 0 ? 'bg-rose-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-600'}`} />
+                          {job}
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          {idx === 0 ? 'Next to Print (FRONT)' : `Position #${idx + 1}`}
+                        </span>
+                      </div>
                     ))}
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] font-mono">
-                    {bracketSimMessage}
-                  </div>
-
                   <div className="flex items-center gap-2 pt-1">
                     <button
                       onClick={() => {
-                        if (bracketStep >= bracketTokens.length) {
-                          setBracketStep(0);
-                          setBracketSimStack([]);
-                          setBracketSimMessage('Reset. Click Step Next to begin.');
-                          return;
-                        }
-                        const token = bracketTokens[bracketStep];
-                        if (['(', '[', '{'].includes(token)) {
-                          setBracketSimStack((prev) => [...prev, token]);
-                          setBracketSimMessage(`Encountered opening '${token}': PUSH('${token}') onto stack.`);
-                        } else {
-                          const last = bracketSimStack[bracketSimStack.length - 1];
-                          const matches =
-                            (token === ')' && last === '(') ||
-                            (token === ']' && last === '[') ||
-                            (token === '}' && last === '{');
-                          if (matches) {
-                            setBracketSimStack((prev) => prev.slice(0, -1));
-                            setBracketSimMessage(`Encountered closing '${token}': Matched top '${last}'! POP('${last}').`);
-                          } else {
-                            setBracketSimMessage(`Mismatch error! Expected matching pair for '${token}'.`);
-                          }
-                        }
-                        setBracketStep((s) => s + 1);
+                        if (spoolerQueue.length === 0) return;
+                        const printed = spoolerQueue[0];
+                        setSpoolerQueue((prev) => prev.slice(1));
+                        setPrintedJobs((prev) => [...prev, printed]);
+                        soundEffects.playSuccess();
+                      }}
+                      disabled={spoolerQueue.length === 0}
+                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-bold rounded-xl transition-all cursor-pointer"
+                    >
+                      Print Next Job (Dequeue)
+                    </button>
+                    <button
+                      onClick={() => {
+                        const newJob = `Doc_${Math.floor(Math.random() * 900) + 100}.pdf`;
+                        setSpoolerQueue((prev) => [...prev, newJob]);
+                        soundEffects.playPush();
                       }}
                       className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all cursor-pointer"
                     >
-                      {bracketStep >= bracketTokens.length ? 'Restart Sim' : 'Step Next Token'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Experiment 5: Undo / Redo Buffer */}
-              {activeExperiment === 'undo' && (
-                <div className="space-y-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm text-slate-900 dark:text-white">
-                      Document Buffer: &quot;{editorText}&quot;
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 text-[11px]">
-                    <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-                      <span className="font-bold text-slate-500 uppercase block mb-1">Undo Stack:</span>
-                      <span className="font-mono text-blue-600 dark:text-blue-400 font-bold">
-                        [{undoStack.join(', ')}]
-                      </span>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-                      <span className="font-bold text-slate-500 uppercase block mb-1">Redo Stack:</span>
-                      <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-                        [{redoStack.join(', ') || 'empty'}]
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 pt-1">
-                    <button
-                      onClick={() => {
-                        if (undoStack.length === 0) return;
-                        const prev = undoStack[undoStack.length - 1];
-                        setUndoStack((u) => u.slice(0, -1));
-                        setRedoStack((r) => [...r, editorText]);
-                        setEditorText(prev);
-                        soundEffects.playPop();
-                      }}
-                      disabled={undoStack.length === 0}
-                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white font-bold rounded-xl transition-all cursor-pointer"
-                    >
-                      Undo (Ctrl+Z)
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (redoStack.length === 0) return;
-                        const next = redoStack[redoStack.length - 1];
-                        setRedoStack((r) => r.slice(0, -1));
-                        setUndoStack((u) => [...u, editorText]);
-                        setEditorText(next);
-                        soundEffects.playPush();
-                      }}
-                      disabled={redoStack.length === 0}
-                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-bold rounded-xl transition-all cursor-pointer"
-                    >
-                      Redo (Ctrl+Y)
+                      + Enqueue New Document
                     </button>
                   </div>
                 </div>
@@ -1213,14 +1354,14 @@ export const InGameLab: React.FC<InGameLabProps> = ({
                 Operations Command Deck
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Execute core and algorithmic stack operations.
+                Execute core and algorithmic queue operations.
               </p>
             </div>
 
-            {/* 1. Custom Value PUSH Input */}
+            {/* 1. Custom Value ENQUEUE Input */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                Push Custom Value:
+                Enqueue Custom Value:
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -1230,7 +1371,7 @@ export const InGameLab: React.FC<InGameLabProps> = ({
                   onChange={(e) => setCustomInputValue(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && customInputValue.trim()) {
-                      handlePush(
+                      handleEnqueue(
                         isNaN(Number(customInputValue)) ? customInputValue.trim() : Number(customInputValue)
                       );
                       setCustomInputValue('');
@@ -1242,7 +1383,7 @@ export const InGameLab: React.FC<InGameLabProps> = ({
                 <button
                   onClick={() => {
                     if (customInputValue.trim()) {
-                      handlePush(
+                      handleEnqueue(
                         isNaN(Number(customInputValue)) ? customInputValue.trim() : Number(customInputValue)
                       );
                       setCustomInputValue('');
@@ -1251,8 +1392,8 @@ export const InGameLab: React.FC<InGameLabProps> = ({
                   disabled={!customInputValue.trim()}
                   className="px-4 py-2 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-2xs active:scale-95 flex items-center gap-1.5"
                 >
-                  <ArrowDownToLine className="w-4 h-4" />
-                  <span>PUSH</span>
+                  <LogIn className="w-4 h-4" />
+                  <span>ENQUEUE</span>
                 </button>
               </div>
 
@@ -1262,7 +1403,7 @@ export const InGameLab: React.FC<InGameLabProps> = ({
                 {QUICK_ELEMENT_CHIPS.map((num) => (
                   <button
                     key={num}
-                    onClick={() => handlePush(num)}
+                    onClick={() => handleEnqueue(num)}
                     className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-950/70 text-slate-700 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-300 font-mono font-bold text-xs transition-colors cursor-pointer"
                   >
                     +{num}
@@ -1274,54 +1415,64 @@ export const InGameLab: React.FC<InGameLabProps> = ({
             {/* 2. Core ADT Buttons Grid */}
             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
               <button
-                onClick={handlePop}
+                onClick={handleDequeue}
                 disabled={isEmpty}
                 className="p-2.5 rounded-2xl bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-950/80 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800/60 font-bold text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer shadow-2xs active:scale-95"
               >
-                <ArrowUpRight className="w-4 h-4 text-red-600 dark:text-red-400" />
-                <span>POP TOP</span>
+                <LogOut className="w-4 h-4 text-red-600 dark:text-red-400" />
+                <span>DEQUEUE FRONT</span>
               </button>
 
               <button
-                onClick={handlePeek}
+                onClick={handlePeekFront}
                 disabled={isEmpty}
                 className="p-2.5 rounded-2xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 font-bold text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer shadow-2xs active:scale-95"
               >
                 <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <span>PEEK TOP</span>
+                <span>PEEK FRONT</span>
               </button>
             </div>
 
-            {/* 3. Advanced Stack Operations Grid */}
+            {/* 3. Advanced Queue Operations Grid */}
             <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
-                Extended Stack Algorithms:
+                Extended Queue Algorithms:
               </span>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                 <button
-                  onClick={handleDuplicateTop}
-                  disabled={isEmpty || isFull}
-                  title="Duplicate top element"
+                  onClick={handlePeekRear}
+                  disabled={isEmpty}
+                  title="Inspect rear element"
                   className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[11px] disabled:opacity-40 transition-all cursor-pointer flex items-center justify-center gap-1"
                 >
-                  <Copy className="w-3.5 h-3.5" />
-                  <span>DUP</span>
+                  <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>PEEK REAR</span>
                 </button>
 
                 <button
-                  onClick={handleSwapTopTwo}
+                  onClick={handleRotateQueue}
+                  disabled={items.length <= 1}
+                  title="Round-robin cycle: Dequeue from front, enqueue to rear"
+                  className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[11px] disabled:opacity-40 transition-all cursor-pointer flex items-center justify-center gap-1"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>CYCLE</span>
+                </button>
+
+                <button
+                  onClick={handleSwapFrontTwo}
                   disabled={items.length < 2}
-                  title="Swap top two elements"
+                  title="Swap front two elements"
                   className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[11px] disabled:opacity-40 transition-all cursor-pointer flex items-center justify-center gap-1"
                 >
                   <Shuffle className="w-3.5 h-3.5" />
-                  <span>SWAP</span>
+                  <span>SWAP FRONT</span>
                 </button>
 
                 <button
-                  onClick={handleReverseStack}
+                  onClick={handleReverseQueue}
                   disabled={items.length <= 1}
-                  title="Reverse stack order"
+                  title="Reverse queue order"
                   className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[11px] disabled:opacity-40 transition-all cursor-pointer flex items-center justify-center gap-1"
                 >
                   <ArrowUpDown className="w-3.5 h-3.5" />
@@ -1329,7 +1480,7 @@ export const InGameLab: React.FC<InGameLabProps> = ({
                 </button>
 
                 <button
-                  onClick={() => handleSortStack(true)}
+                  onClick={() => handleSortQueue(true)}
                   disabled={items.length <= 1}
                   title="Sort elements in ascending order"
                   className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[11px] disabled:opacity-40 transition-all cursor-pointer flex items-center justify-center gap-1"
@@ -1338,21 +1489,13 @@ export const InGameLab: React.FC<InGameLabProps> = ({
                 </button>
 
                 <button
-                  onClick={() => handleSortStack(false)}
-                  disabled={items.length <= 1}
-                  title="Sort elements in descending order"
+                  onClick={handleDuplicateRear}
+                  disabled={isEmpty || isFull}
+                  title="Duplicate rear element"
                   className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[11px] disabled:opacity-40 transition-all cursor-pointer flex items-center justify-center gap-1"
                 >
-                  <span>SORT ↓</span>
-                </button>
-
-                <button
-                  onClick={handleRotateStack}
-                  disabled={items.length <= 1}
-                  title="Rotate bottom to top"
-                  className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[11px] disabled:opacity-40 transition-all cursor-pointer flex items-center justify-center gap-1"
-                >
-                  <span>ROTATE</span>
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>DUP REAR</span>
                 </button>
               </div>
             </div>
@@ -1364,25 +1507,25 @@ export const InGameLab: React.FC<InGameLabProps> = ({
               </span>
               <div className="flex items-center gap-1.5 flex-wrap">
                 <button
-                  onClick={() => handleBatchPush('seq')}
+                  onClick={() => handleBatchEnqueue('seq')}
                   className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono font-bold text-[11px] transition-colors cursor-pointer"
                 >
                   + [10..40]
                 </button>
                 <button
-                  onClick={() => handleBatchPush('fib')}
+                  onClick={() => handleBatchEnqueue('fib')}
                   className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono font-bold text-[11px] transition-colors cursor-pointer"
                 >
                   + Fibonacci
                 </button>
                 <button
-                  onClick={() => handleBatchPush('random')}
+                  onClick={() => handleBatchEnqueue('random')}
                   className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono font-bold text-[11px] transition-colors cursor-pointer"
                 >
                   🎲 3 Random
                 </button>
                 <button
-                  onClick={() => handleBatchPush('fill')}
+                  onClick={() => handleBatchEnqueue('fill')}
                   className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono font-bold text-[11px] transition-colors cursor-pointer"
                 >
                   ⚡ Fill Max
@@ -1393,7 +1536,7 @@ export const InGameLab: React.FC<InGameLabProps> = ({
             {/* 5. Search Element */}
             <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                Search Element Depth:
+                Search Element Position:
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -1475,12 +1618,12 @@ export const InGameLab: React.FC<InGameLabProps> = ({
                   <div className="flex items-center gap-2 min-w-0">
                     <span
                       className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-black shrink-0 ${
-                        log.operation === 'PUSH'
+                        log.operation === 'ENQUEUE' || log.operation === 'PUSH'
                           ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
-                          : log.operation === 'POP'
+                          : log.operation === 'DEQUEUE' || log.operation === 'POP'
                           ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300'
-                          : log.operation === 'PEEK'
-                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+                          : log.operation === 'PEEK' || log.operation === 'PEEK_FRONT' || log.operation === 'PEEK_REAR'
+                          ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300'
                           : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
                       }`}
                     >

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Gamepad2, Sparkles, RotateCcw, RefreshCw, LayoutGrid, ArrowLeft, Lightbulb } from 'lucide-react';
+import { Gamepad2, Sparkles, RotateCcw, RefreshCw, LayoutGrid, ArrowLeft, Lightbulb, BookOpen } from 'lucide-react';
 import { GameLevelConfig, UserProgress } from '../../types';
 
 interface GameHeaderProps {
@@ -13,6 +13,7 @@ interface GameHeaderProps {
   isLabActive?: boolean;
   onOpenLab?: () => void;
   onOpenGuidedSolve?: () => void;
+  onOpenLearn?: () => void;
   onSelectLevel: (levelId: number) => void;
   onResetChallenge: () => void;
   onResetGame?: () => void;
@@ -30,6 +31,7 @@ export const GameHeader: React.FC<GameHeaderProps> = ({
   isLabActive = false,
   onOpenLab,
   onOpenGuidedSolve,
+  onOpenLearn,
   onSelectLevel,
   onResetChallenge,
   onResetGame,
@@ -90,6 +92,18 @@ export const GameHeader: React.FC<GameHeaderProps> = ({
             >
               <Lightbulb className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
               <span>Guided Solve</span>
+            </button>
+          )}
+
+          {/* Learn / Cheat Sheet Button */}
+          {onOpenLearn && (
+            <button
+              onClick={onOpenLearn}
+              title="Open Queue Cheat Sheet"
+              className="px-3 py-1.5 rounded-xl font-bold text-xs border border-blue-300 dark:border-blue-700/80 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 text-blue-900 dark:text-blue-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <span>Learn</span>
             </button>
           )}
 

@@ -16,6 +16,7 @@ import {
   RefreshCw,
   Layers,
   ArrowRight,
+  ArrowLeft,
   ArrowDown,
   FileCode,
   CheckCircle2,
@@ -193,8 +194,8 @@ export const EducationalVideoPlayer: React.FC<EducationalVideoPlayerProps> = ({
 
       synthRef.current.speak(utterance);
 
-      if (activeScene.type === 'push') playSfx('push');
-      else if (activeScene.type === 'pop') playSfx('pop');
+      if (activeScene.type === 'push' || activeScene.type === 'enqueue') playSfx('push');
+      else if (activeScene.type === 'pop' || activeScene.type === 'dequeue') playSfx('pop');
       else if (activeScene.type === 'peek') playSfx('peek');
       else if (activeScene.type === 'overflow' || activeScene.type === 'underflow') playSfx('warning');
       else playSfx('transition');
@@ -772,159 +773,171 @@ export const EducationalVideoPlayer: React.FC<EducationalVideoPlayerProps> = ({
 
             {/* Middle Stage: Dynamic Visual Renderers based on Lesson & Scene */}
             <div className="relative z-10 flex-1 flex items-center justify-center py-2 min-h-0">
-              {/* ─── LESSON 01 VISUALIZERS: STACK DATA STRUCTURE ─── */}
+              {/* ─── LESSON 01 VISUALIZERS: QUEUE DATA STRUCTURE ─── */}
               {activeLesson.id === 1 && (
-                <div className="w-full max-w-xl flex flex-col items-center justify-center animate-fadeIn">
-                  <div className="flex flex-col items-center gap-2">
-                    {/* TOP Indicator Arrow */}
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-950/80 border border-indigo-500/50 text-indigo-300 font-mono text-xs font-bold animate-pulse">
-                      <span>TOP</span>
-                      <ArrowDown className="w-3.5 h-3.5 text-indigo-400" />
-                      <span className="text-[10px] text-indigo-400">stack[3]</span>
+                <div className="w-full max-w-xl flex flex-col items-center justify-center animate-fadeIn px-2">
+                  <div className="flex flex-col items-center gap-3 w-full">
+                    {/* FRONT & REAR Pointer Indicator Badges */}
+                    <div className="w-full max-w-md flex items-center justify-between px-1 font-mono text-xs font-bold">
+                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-950/80 border border-rose-500/50 text-rose-300 animate-pulse">
+                        <span>FRONT (Exit)</span>
+                        <ArrowLeft className="w-3.5 h-3.5 text-rose-400" />
+                        <span className="text-[10px] text-rose-400">queue[0]</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-emerald-300">
+                        <span>REAR (Entry)</span>
+                        <ArrowLeft className="w-3.5 h-3.5 text-emerald-400" />
+                        <span className="text-[10px] text-emerald-400">queue[3]</span>
+                      </div>
                     </div>
 
-                    {/* Vertical Stack Frame */}
-                    <div className="w-48 sm:w-56 border-2 border-t-0 border-indigo-400/80 rounded-b-2xl p-2 flex flex-col gap-1.5 bg-slate-950/80 shadow-2xl shadow-indigo-950/50">
+                    {/* Horizontal Queue Pipeline Frame */}
+                    <div className="w-full max-w-md border-y-2 border-indigo-400/80 rounded-2xl p-3 flex items-center justify-between gap-1.5 bg-slate-950/80 shadow-2xl shadow-indigo-950/50 relative overflow-x-auto">
                       {[
-                        { val: 40, label: 'TOP (Index 3)', highlight: true },
-                        { val: 30, label: 'Index 2', highlight: false },
-                        { val: 20, label: 'Index 1', highlight: false },
-                        { val: 10, label: 'BOTTOM (Index 0)', highlight: false },
+                        { val: 10, isFront: true, isRear: false },
+                        { val: 20, isFront: false, isRear: false },
+                        { val: 30, isFront: false, isRear: false },
+                        { val: 40, isFront: false, isRear: true },
                       ].map((item, idx) => (
-                        <div
-                          key={item.val}
-                          className={`py-2 px-3 rounded-xl flex items-center justify-between font-mono text-xs sm:text-sm font-bold border transition-all duration-300 ${
-                            item.highlight
-                              ? 'bg-indigo-600 text-white border-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.5)]'
-                              : 'bg-slate-900/90 text-slate-200 border-slate-700/80'
-                          }`}
-                        >
-                          <span className="text-[10px] opacity-75 font-mono">[{3 - idx}]</span>
-                          <span className="text-sm sm:text-base font-black">{item.val}</span>
-                          <span className="text-[9px] uppercase tracking-wider text-indigo-300">
-                            {idx === 0 ? 'TOP' : idx === 3 ? 'BASE' : ''}
-                          </span>
+                        <div key={item.val} className="flex items-center gap-1.5">
+                          <div
+                            className={`w-16 sm:w-20 py-2.5 rounded-xl flex flex-col items-center justify-center font-mono font-bold border transition-all duration-300 ${
+                              item.isFront
+                                ? 'bg-rose-600 text-white border-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.5)]'
+                                : item.isRear
+                                ? 'bg-emerald-600 text-white border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.5)]'
+                                : 'bg-slate-900/90 text-slate-200 border-slate-700/80'
+                            }`}
+                          >
+                            <span className="text-[9px] opacity-75 font-mono">[{idx}]</span>
+                            <span className="text-sm sm:text-base font-black my-0.5">{item.val}</span>
+                            <span className="text-[8px] uppercase tracking-wider font-extrabold">
+                              {item.isFront ? 'FRONT' : item.isRear ? 'REAR' : 'MID'}
+                            </span>
+                          </div>
+                          {idx < 3 && (
+                            <span className="text-slate-500 font-mono text-sm select-none">→</span>
+                          )}
                         </div>
                       ))}
                     </div>
 
-                    {/* BOTTOM Label & LIFO Principle Chips */}
-                    <span className="text-[11px] font-mono text-slate-400 font-bold uppercase tracking-widest mt-0.5">
-                      BOTTOM (Index 0)
-                    </span>
-
-                    <div className="flex items-center gap-2 mt-2">
+                    {/* Flow & FIFO Principle Chips */}
+                    <div className="flex items-center gap-2 mt-1 flex-wrap justify-center">
                       <span className="px-2.5 py-1 rounded-lg bg-indigo-950/70 border border-indigo-800/80 text-indigo-300 text-xs font-mono font-bold">
-                        LIFO: Last In, First Out
+                        FIFO: First In, First Out
                       </span>
                       <span className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 text-xs font-mono">
-                        Direct Access: TOP Only
+                        Enqueue at REAR • Dequeue at FRONT
                       </span>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* ─── LESSON 02 VISUALIZERS: STACK OPERATIONS ─── */}
+              {/* ─── LESSON 02 VISUALIZERS: QUEUE OPERATIONS ─── */}
               {activeLesson.id === 2 && (
-                <div className="w-full max-w-lg flex flex-col items-center justify-center">
-                  <div className="flex items-center gap-6 sm:gap-10">
-                    {/* Left Pointer Column */}
-                    <div className="flex flex-col items-end justify-end h-44 py-1 text-xs font-mono text-slate-400">
+                <div className="w-full max-w-lg flex flex-col items-center justify-center animate-fadeIn px-2">
+                  <div className="w-full flex flex-col md:flex-row items-center justify-center gap-4 sm:gap-6">
+                    {/* Horizontal Queue Interactive Pipeline */}
+                    <div className="w-full max-w-sm border-y-2 border-indigo-500/80 rounded-2xl bg-slate-900/90 p-3 flex items-center justify-between gap-1.5 shadow-2xl relative min-h-[90px]">
+                      {/* Element 10: FRONT Element */}
                       <div
-                        className={`transition-all duration-300 flex items-center gap-1 font-bold ${
-                          activeScene?.type === 'push'
-                            ? 'text-emerald-400 translate-y-[-10px]'
-                            : activeScene?.type === 'pop'
-                            ? 'text-rose-400 translate-y-[20px]'
-                            : activeScene?.type === 'peek'
-                            ? 'text-amber-300'
-                            : 'text-cyan-400'
+                        className={`w-16 sm:w-18 py-2 rounded-xl text-center font-mono font-bold text-xs sm:text-sm border transition-all duration-500 ${
+                          activeScene?.type === 'peek'
+                            ? 'bg-amber-500 border-amber-300 text-slate-950 shadow-[0_0_20px_rgba(251,191,36,0.8)] animate-pulse'
+                            : activeScene?.type === 'dequeue' || activeScene?.type === 'pop'
+                            ? 'bg-rose-600 border-rose-400 text-white shadow-[0_0_18px_rgba(244,63,94,0.6)]'
+                            : 'bg-rose-950/80 border-rose-800/80 text-rose-300'
                         }`}
+                        style={
+                          activeScene?.type === 'dequeue' || activeScene?.type === 'pop'
+                            ? {
+                                transform: `translateX(${sceneProgress * -40}px)`,
+                                opacity: 1 - sceneProgress * 0.7,
+                              }
+                            : {}
+                        }
                       >
-                        <span>TOP ➔</span>
-                      </div>
-                    </div>
-
-                    {/* Stack Cylinder Container */}
-                    <div className="w-32 sm:w-36 h-48 border-x-4 border-b-4 border-indigo-500/80 rounded-b-2xl bg-slate-900/90 p-2 flex flex-col-reverse gap-1.5 shadow-2xl relative">
-                      <div className="w-full py-2 bg-indigo-950/80 border border-indigo-800/80 rounded-xl text-center font-mono font-bold text-xs sm:text-sm text-slate-300">
-                        10 <span className="text-[9px] text-slate-500">[0]</span>
-                      </div>
-
-                      <div className="w-full py-2 bg-indigo-900/70 border border-indigo-700/80 rounded-xl text-center font-mono font-bold text-xs sm:text-sm text-slate-200">
-                        20 <span className="text-[9px] text-slate-500">[1]</span>
-                      </div>
-
-                      <div className="w-full py-2 bg-indigo-800/80 border border-indigo-600/80 rounded-xl text-center font-mono font-bold text-xs sm:text-sm text-slate-100">
-                        30 <span className="text-[9px] text-slate-400">[2]</span>
-                      </div>
-
-                      {activeScene?.type === 'push' && (
-                        <div
-                          className="w-full py-2 bg-emerald-600 border border-emerald-400 rounded-xl text-center font-mono font-bold text-xs sm:text-sm text-white shadow-[0_0_18px_rgba(52,211,153,0.6)] transition-all duration-500"
-                          style={{
-                            transform: `translateY(${(1 - sceneProgress) * -40}px)`,
-                            opacity: sceneProgress,
-                          }}
-                        >
-                          40 <span className="text-[9px] text-emerald-200">[3]</span>
+                        <div className="text-[8px] uppercase tracking-wider text-rose-300 font-extrabold">
+                          {activeScene?.type === 'peek' ? 'PEEK' : 'FRONT'}
                         </div>
-                      )}
+                        <div className="font-black text-sm">10</div>
+                        <div className="text-[8px] opacity-75">[0]</div>
+                      </div>
 
-                      {activeScene?.type === 'peek' && (
-                        <div className="w-full py-2 bg-amber-500 border border-amber-300 rounded-xl text-center font-mono font-bold text-xs sm:text-sm text-slate-950 shadow-[0_0_20px_rgba(251,191,36,0.8)] animate-pulse">
-                          40 <span className="text-[9px] text-amber-950 font-bold">[PEEKED]</span>
-                        </div>
-                      )}
+                      <span className="text-slate-600 font-mono text-xs">→</span>
 
-                      {activeScene?.type === 'pop' && (
-                        <div
-                          className="w-full py-2 bg-rose-600 border border-rose-400 rounded-xl text-center font-mono font-bold text-xs sm:text-sm text-white shadow-[0_0_18px_rgba(244,63,94,0.6)] transition-all duration-500"
-                          style={{
-                            transform: `translateY(${sceneProgress * -50}px)`,
-                            opacity: 1 - sceneProgress * 0.7,
-                          }}
-                        >
-                          40 <span className="text-[9px] text-rose-200">[POPPED]</span>
-                        </div>
+                      {/* Element 20 */}
+                      <div className="w-16 sm:w-18 py-2 bg-indigo-950/80 border border-indigo-800/80 rounded-xl text-center font-mono font-bold text-xs sm:text-sm text-slate-200">
+                        <div className="text-[8px] uppercase tracking-wider text-slate-400">MID</div>
+                        <div className="font-black text-sm">20</div>
+                        <div className="text-[8px] opacity-75">[1]</div>
+                      </div>
+
+                      <span className="text-slate-600 font-mono text-xs">→</span>
+
+                      {/* Element 30 */}
+                      <div className="w-16 sm:w-18 py-2 bg-indigo-900/70 border border-indigo-700/80 rounded-xl text-center font-mono font-bold text-xs sm:text-sm text-slate-100">
+                        <div className="text-[8px] uppercase tracking-wider text-slate-400">MID</div>
+                        <div className="font-black text-sm">30</div>
+                        <div className="text-[8px] opacity-75">[2]</div>
+                      </div>
+
+                      {/* Element 40: REAR / ENQUEUE Element */}
+                      {(activeScene?.type === 'enqueue' || activeScene?.type === 'push') && (
+                        <>
+                          <span className="text-emerald-500 font-mono text-xs">→</span>
+                          <div
+                            className="w-16 sm:w-18 py-2 bg-emerald-600 border border-emerald-400 rounded-xl text-center font-mono font-bold text-xs sm:text-sm text-white shadow-[0_0_18px_rgba(52,211,153,0.6)] transition-all duration-500"
+                            style={{
+                              transform: `translateX(${(1 - sceneProgress) * 40}px)`,
+                              opacity: sceneProgress,
+                            }}
+                          >
+                            <div className="text-[8px] uppercase tracking-wider text-emerald-200 font-extrabold">REAR</div>
+                            <div className="font-black text-sm">40</div>
+                            <div className="text-[8px] opacity-75">[3]</div>
+                          </div>
+                        </>
                       )}
 
                       {activeScene?.type === 'overflow' && (
-                        <div className="w-full py-1.5 bg-red-950/80 border border-red-500/80 rounded-xl text-center font-mono font-bold text-[10px] text-red-300 flex items-center justify-center gap-1 animate-bounce">
-                          <AlertTriangle className="w-3 h-3" /> FULL
+                        <div className="absolute inset-0 bg-red-950/90 border border-red-500 rounded-2xl flex items-center justify-center gap-2 font-mono font-bold text-xs text-red-300 animate-bounce">
+                          <AlertTriangle className="w-4 h-4 text-red-400" />
+                          <span>QUEUE OVERFLOW: BUFFER FULL</span>
                         </div>
                       )}
                     </div>
 
                     {/* Right Operation Callout */}
-                    <div className="flex flex-col gap-1.5 text-xs font-mono max-w-[130px]">
-                      {activeScene?.type === 'push' && (
-                        <div className="p-2 rounded-xl bg-emerald-950/80 border border-emerald-600/70 text-emerald-300">
-                          <span className="font-bold block">PUSH(40)</span>
-                          <span className="text-[10px] text-emerald-400">Enters at TOP</span>
+                    <div className="flex flex-col gap-1.5 text-xs font-mono min-w-[130px]">
+                      {(activeScene?.type === 'enqueue' || activeScene?.type === 'push') && (
+                        <div className="p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-600/70 text-emerald-300">
+                          <span className="font-bold block">ENQUEUE(40)</span>
+                          <span className="text-[10px] text-emerald-400">Enters at REAR</span>
                         </div>
                       )}
                       {activeScene?.type === 'peek' && (
-                        <div className="p-2 rounded-xl bg-amber-950/80 border border-amber-600/70 text-amber-300">
-                          <span className="font-bold block">PEEK()</span>
-                          <span className="text-[10px] text-amber-400">Reads 40 safely</span>
+                        <div className="p-2.5 rounded-xl bg-amber-950/80 border border-amber-600/70 text-amber-300">
+                          <span className="font-bold block">PEEK FRONT</span>
+                          <span className="text-[10px] text-amber-400">Inspects 10 safely</span>
                         </div>
                       )}
-                      {activeScene?.type === 'pop' && (
-                        <div className="p-2 rounded-xl bg-rose-950/80 border border-rose-600/70 text-rose-300">
-                          <span className="font-bold block">POP()</span>
-                          <span className="text-[10px] text-rose-400">Extracts 40 (LIFO)</span>
+                      {(activeScene?.type === 'dequeue' || activeScene?.type === 'pop') && (
+                        <div className="p-2.5 rounded-xl bg-rose-950/80 border border-rose-600/70 text-rose-300">
+                          <span className="font-bold block">DEQUEUE()</span>
+                          <span className="text-[10px] text-rose-400">Extracts 10 (FIFO)</span>
                         </div>
                       )}
-                      {activeScene?.type === 'stack-lifo' && (
-                        <div className="p-2 rounded-xl bg-cyan-950/80 border border-cyan-600/70 text-cyan-300">
-                          <span className="font-bold block">LIFO ORDER</span>
-                          <span className="text-[10px] text-cyan-400">Last In, First Out</span>
+                      {(activeScene?.type === 'queue-fifo' || activeScene?.type === 'stack-lifo') && (
+                        <div className="p-2.5 rounded-xl bg-cyan-950/80 border border-cyan-600/70 text-cyan-300">
+                          <span className="font-bold block">FIFO ORDER</span>
+                          <span className="text-[10px] text-cyan-400">First In, First Out</span>
                         </div>
                       )}
                       {activeScene?.type === 'overflow' && (
-                        <div className="p-2 rounded-xl bg-blue-950/80 border border-blue-600/70 text-blue-300">
+                        <div className="p-2.5 rounded-xl bg-blue-950/80 border border-blue-600/70 text-blue-300">
                           <span className="font-bold block">O(1) BOUNDS</span>
                           <span className="text-[10px] text-blue-400">Defensive guards</span>
                         </div>

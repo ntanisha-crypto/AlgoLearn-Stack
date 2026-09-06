@@ -11,6 +11,8 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Sparkles,
   Trophy,
   Star,
@@ -48,6 +50,7 @@ export const QuizView: React.FC<QuizViewProps> = ({
   const [quizFinished, setQuizFinished] = useState<boolean>(false);
   const [isHintOpen, setIsHintOpen] = useState<boolean>(false);
   const [reviewQuestionIdx, setReviewQuestionIdx] = useState<number | null>(null);
+  const [expandedQuestions, setExpandedQuestions] = useState<Record<number, boolean>>({});
 
   const currentQ: QuizQuestion = QUIZ_QUESTIONS[currentIdx];
   const currentAnswerState = answers[currentIdx] || {
@@ -223,6 +226,29 @@ export const QuizView: React.FC<QuizViewProps> = ({
     setAnswers({});
     setQuizFinished(false);
     setReviewQuestionIdx(null);
+    setExpandedQuestions({});
+  };
+
+  const allAreExpanded = QUIZ_QUESTIONS.every(
+    (_, idx) => expandedQuestions[idx] !== false
+  );
+
+  const handleToggleAll = () => {
+    soundEffects.playClick();
+    const nextState = !allAreExpanded;
+    const newMap: Record<number, boolean> = {};
+    QUIZ_QUESTIONS.forEach((_, idx) => {
+      newMap[idx] = nextState;
+    });
+    setExpandedQuestions(newMap);
+  };
+
+  const toggleQuestionExpand = (idx: number) => {
+    soundEffects.playClick();
+    setExpandedQuestions((prev) => ({
+      ...prev,
+      [idx]: !(prev[idx] !== undefined ? prev[idx] : true),
+    }));
   };
 
   // Compute live score stats
@@ -255,7 +281,7 @@ export const QuizView: React.FC<QuizViewProps> = ({
             </h1>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Validate your algorithmic Stack reasoning and earn mastery points.
+            Validate your algorithmic Queue reasoning and earn mastery points (Basic to Hard).
           </p>
         </div>
 
@@ -341,10 +367,25 @@ export const QuizView: React.FC<QuizViewProps> = ({
         <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs space-y-6">
           {/* Question Category Badge & Text */}
           <div>
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/80 px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
-                {currentQ.type.replace('-', ' ')}
-              </span>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
+                {currentQ.difficulty && (
+                  <span
+                    className={`text-[10px] uppercase font-mono font-bold px-2.5 py-0.5 rounded-full border ${
+                      currentQ.difficulty === 'Basic'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800'
+                        : currentQ.difficulty === 'Intermediate'
+                        ? 'bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800'
+                        : 'bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-800'
+                    }`}
+                  >
+                    ★ {currentQ.difficulty} Level
+                  </span>
+                )}
+                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
+                  {currentQ.type.replace('-', ' ')}
+                </span>
+              </div>
               {currentAnswerState.isSubmitted && (
                 <span
                   className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${
@@ -562,10 +603,10 @@ export const QuizView: React.FC<QuizViewProps> = ({
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-md">
                 {finalScorePercent >= 80
-                  ? 'Incredible performance! You demonstrated thorough command of Stack operations and algorithmic constraints.'
+                  ? 'Incredible performance! You demonstrated thorough command of Queue operations, circular buffers, and algorithmic constraints.'
                   : finalScorePercent >= 60
-                  ? 'Great job! You have a solid grasp of Stack fundamentals and lifecycle behavior.'
-                  : 'Good effort! Review the detailed question explanations below to sharpen your Stack mechanics.'}
+                  ? 'Great job! You have a solid grasp of Queue fundamentals, pointer mechanics, and FIFO lifecycle behavior.'
+                  : 'Good effort! Review the detailed question explanations below to sharpen your Queue mechanics.'}
               </p>
 
               {/* ─── VIBRANT HIGHLIGHTED SCORE BADGE ─── */}
@@ -656,82 +697,221 @@ export const QuizView: React.FC<QuizViewProps> = ({
 
           {/* 2. QUESTION-BY-QUESTION REVIEW BREAKDOWN */}
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 <Eye className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   Question Breakdown & Answers
                 </h3>
               </div>
-              <span className="text-xs font-mono text-slate-400">
-                {totalCorrect} of {QUIZ_QUESTIONS.length} Correct
-              </span>
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={handleToggleAll}
+                  className="px-2.5 py-1 rounded-lg text-xs font-mono font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors flex items-center gap-1 cursor-pointer border border-slate-200 dark:border-slate-700"
+                >
+                  {allAreExpanded ? (
+                    <>
+                      <ChevronUp className="w-3.5 h-3.5" />
+                      <span>Collapse All</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-3.5 h-3.5" />
+                      <span>Expand All</span>
+                    </>
+                  )}
+                </button>
+                <span className="text-xs font-mono text-slate-500 dark:text-slate-400 font-semibold bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700">
+                  {totalCorrect} of {QUIZ_QUESTIONS.length} Correct
+                </span>
+              </div>
             </div>
 
             <div className="space-y-3">
               {QUIZ_QUESTIONS.map((q, idx) => {
                 const ans = answers[idx];
-                const isCorrect = ans?.isCorrect;
-                const isExpanded = reviewQuestionIdx === idx;
+                const isCorrect = ans?.isCorrect ?? false;
+                const isExpanded =
+                  expandedQuestions[idx] !== undefined
+                    ? expandedQuestions[idx]
+                    : true;
+
+                const userChoiceText =
+                  q.type === 'drag-order'
+                    ? ans?.draggedOrder && ans.draggedOrder.length > 0
+                      ? ans.draggedOrder.join(' ➔ ')
+                      : 'No order selected'
+                    : ans?.selectedOption || 'No option selected';
+
+                const correctOptionText = Array.isArray(q.correctAnswer)
+                  ? q.correctAnswer.join(' ➔ ')
+                  : q.correctAnswer;
 
                 return (
                   <div
                     key={q.id}
-                    className={`rounded-2xl border transition-all ${
+                    className={`rounded-2xl border transition-all overflow-hidden ${
                       isCorrect
-                        ? 'border-emerald-200/80 dark:border-emerald-800/60 bg-emerald-50/30 dark:bg-emerald-950/20'
-                        : 'border-rose-200/80 dark:border-rose-800/60 bg-rose-50/30 dark:bg-rose-950/20'
+                        ? 'border-emerald-200/80 dark:border-emerald-800/60 bg-emerald-50/20 dark:bg-emerald-950/10'
+                        : 'border-rose-200/80 dark:border-rose-800/60 bg-rose-50/20 dark:bg-rose-950/10'
                     }`}
                   >
+                    {/* Collapsible Card Header */}
                     <div
-                      onClick={() =>
-                        setReviewQuestionIdx(isExpanded ? null : idx)
-                      }
-                      className="p-4 flex items-center justify-between gap-3 cursor-pointer select-none"
+                      onClick={() => toggleQuestionExpand(idx)}
+                      className="p-4 flex items-start sm:items-center justify-between gap-3 cursor-pointer select-none hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
                         <div
-                          className={`w-7 h-7 rounded-xl flex items-center justify-center font-mono font-bold text-xs shrink-0 ${
+                          className={`w-7 h-7 rounded-xl flex items-center justify-center font-mono font-bold text-xs shrink-0 mt-0.5 sm:mt-0 ${
                             isCorrect
-                              ? 'bg-emerald-600 text-white'
-                              : 'bg-rose-600 text-white'
+                              ? 'bg-emerald-600 text-white shadow-xs'
+                              : 'bg-rose-600 text-white shadow-xs'
                           }`}
                         >
                           {idx + 1}
                         </div>
-                        <div>
-                          <span className="text-xs font-bold text-slate-900 dark:text-slate-100 line-clamp-1">
-                            {q.question}
-                          </span>
-                          <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 block mt-0.5">
-                            {isCorrect ? '✓ Solved Correctly' : '✕ Missed Answer'}
-                          </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {q.difficulty && (
+                              <span
+                                className={`text-[9px] uppercase font-mono font-bold px-1.5 py-0.5 rounded border shrink-0 ${
+                                  q.difficulty === 'Basic'
+                                    ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800'
+                                    : q.difficulty === 'Intermediate'
+                                    ? 'bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800'
+                                    : 'bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-800'
+                                }`}
+                              >
+                                {q.difficulty}
+                              </span>
+                            )}
+                            <span className="text-xs font-bold text-slate-900 dark:text-slate-100 line-clamp-1">
+                              {q.question}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] font-mono">
+                            <span
+                              className={`font-semibold flex items-center gap-1 ${
+                                isCorrect
+                                  ? 'text-emerald-600 dark:text-emerald-400'
+                                  : 'text-rose-600 dark:text-rose-400'
+                              }`}
+                            >
+                              {isCorrect ? (
+                                <>
+                                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                  <span>Solved Correctly</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="font-black text-xs leading-none">✕</span>
+                                  <span>Incorrect Answer</span>
+                                </>
+                              )}
+                            </span>
+                            <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">•</span>
+                            <span className="text-slate-500 dark:text-slate-400 truncate max-w-xs sm:max-w-sm">
+                              Your Choice: <span className={isCorrect ? 'text-emerald-700 dark:text-emerald-300 font-medium' : 'text-rose-700 dark:text-rose-300 font-medium'}>{userChoiceText}</span>
+                            </span>
+                          </div>
                         </div>
                       </div>
 
                       <button
                         type="button"
-                        className="px-3 py-1 rounded-lg text-xs font-mono font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleQuestionExpand(idx);
+                        }}
+                        className="px-3 py-1.5 rounded-xl text-xs font-mono font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition-colors flex items-center gap-1 shrink-0 ml-2"
                       >
-                        {isExpanded ? 'Hide' : 'Explain'}
+                        <span>{isExpanded ? 'Hide' : 'Explain'}</span>
+                        {isExpanded ? (
+                          <ChevronUp className="w-3.5 h-3.5" />
+                        ) : (
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        )}
                       </button>
                     </div>
 
+                    {/* Expanded Detail Body */}
                     {isExpanded && (
-                      <div className="px-4 pb-4 pt-1 text-xs space-y-2 border-t border-slate-200/60 dark:border-slate-800">
-                        <div className="pt-2 text-slate-600 dark:text-slate-300">
-                          <span className="font-bold text-slate-800 dark:text-slate-200">
-                            Correct Answer:{' '}
+                      <div className="px-4 pb-4 pt-3 text-xs space-y-3 border-t border-slate-200/60 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60">
+                        {/* Full Question Text */}
+                        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80">
+                          <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
+                            Question Prompt:
                           </span>
-                          <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-                            {Array.isArray(q.correctAnswer)
-                              ? q.correctAnswer.join(' ➔ ')
-                              : q.correctAnswer}
-                          </span>
+                          <p className="text-xs sm:text-sm font-medium text-slate-900 dark:text-slate-100 leading-relaxed whitespace-pre-line">
+                            {q.question}
+                          </p>
                         </div>
-                        <p className="text-slate-600 dark:text-slate-400 leading-relaxed bg-white/70 dark:bg-slate-900/70 p-3 rounded-xl border border-slate-200/70 dark:border-slate-800">
-                          💡 <strong className="text-slate-800 dark:text-slate-200">Explanation:</strong> {q.explanation}
-                        </p>
+
+                        {/* Side-by-Side Comparison: User Choice vs Correct Option */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {/* Option User Chose */}
+                          <div
+                            className={`p-3.5 rounded-xl border-2 space-y-1.5 ${
+                              isCorrect
+                                ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-400/80 dark:border-emerald-700 text-emerald-950 dark:text-emerald-100'
+                                : 'bg-rose-50/70 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-950 dark:text-rose-100'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                {isCorrect ? (
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                ) : (
+                                  <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                                )}
+                                <span>Option You Chose</span>
+                              </span>
+                              <span
+                                className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                                  isCorrect
+                                    ? 'bg-emerald-600 text-white'
+                                    : 'bg-rose-600 text-white'
+                                }`}
+                              >
+                                {isCorrect ? '✓ Correct Choice' : '✕ Incorrect'}
+                              </span>
+                            </div>
+                            <div className="font-mono text-xs sm:text-sm font-bold pt-1 break-words">
+                              {userChoiceText}
+                            </div>
+                          </div>
+
+                          {/* Option Which Is Correct */}
+                          <div className="p-3.5 rounded-xl border-2 bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-400/80 dark:border-emerald-700 text-emerald-950 dark:text-emerald-100 space-y-1.5">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                                <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 stroke-[3]" />
+                                <span>Option Which Is Correct</span>
+                              </span>
+                              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white">
+                                ✓ Correct Answer
+                              </span>
+                            </div>
+                            <div className="font-mono text-xs sm:text-sm font-bold text-emerald-900 dark:text-emerald-200 pt-1 break-words">
+                              {correctOptionText}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Explain why the option is correct */}
+                        <div className="p-3.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 space-y-1.5">
+                          <div className="flex items-center gap-1.5 text-blue-900 dark:text-blue-200 font-bold">
+                            <Lightbulb className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
+                            <span className="font-mono uppercase text-[11px] tracking-wider">
+                              Why this option is correct:
+                            </span>
+                          </div>
+                          <p className="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line text-xs sm:text-[13px] pl-5">
+                            {q.explanation}
+                          </p>
+                        </div>
                       </div>
                     )}
                   </div>

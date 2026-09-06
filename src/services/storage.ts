@@ -3,8 +3,8 @@ import { UserProgress, Achievement } from '../types';
 export const INITIAL_ACHIEVEMENTS: Achievement[] = [
   {
     id: 'first_push',
-    title: 'First Push',
-    description: 'Push your very first element onto the Stack.',
+    title: 'First Enqueue',
+    description: 'Enqueue your very first element at the REAR of the Queue.',
     iconName: 'ArrowDownToLine',
     xpReward: 50,
     unlocked: false,
@@ -12,8 +12,8 @@ export const INITIAL_ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'lifo_master',
-    title: 'LIFO Disciple',
-    description: 'Successfully complete 5 LIFO pop operations in the Lab or Game.',
+    title: 'FIFO Specialist',
+    description: 'Successfully complete 5 FIFO dequeue operations from the FRONT.',
     iconName: 'Layers',
     xpReward: 75,
     unlocked: false,
@@ -22,7 +22,7 @@ export const INITIAL_ACHIEVEMENTS: Achievement[] = [
   {
     id: 'overflow_explorer',
     title: 'Boundary Tester',
-    description: 'Experience Stack Overflow or Underflow state in the Lab.',
+    description: 'Experience Queue Overflow or Underflow boundary state in the Lab.',
     iconName: 'AlertTriangle',
     xpReward: 60,
     unlocked: false,
@@ -30,8 +30,8 @@ export const INITIAL_ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'speed_demon',
-    title: 'Speed Stacker',
-    description: 'Complete the Level 6 Speed Stack challenge under 60 seconds.',
+    title: 'Speed Queuer',
+    description: 'Complete the Level 6 Queue Speed Challenge under 60 seconds.',
     iconName: 'Zap',
     xpReward: 150,
     unlocked: false,
@@ -39,8 +39,8 @@ export const INITIAL_ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'debugger_pro',
-    title: 'Debugging Pro',
-    description: 'Spot and eliminate an invalid underflow operation in Level 5.',
+    title: 'Queue Guard Pro',
+    description: 'Spot and eliminate an invalid underflow or empty queue violation.',
     iconName: 'ShieldAlert',
     xpReward: 100,
     unlocked: false,
@@ -48,8 +48,8 @@ export const INITIAL_ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'lab_explorer',
-    title: 'Lab Explorer',
-    description: 'Perform 10 or more interactive Push and Pop operations in the Lab.',
+    title: 'Queue Lab Explorer',
+    description: 'Perform 10 or more interactive Enqueue, Dequeue, and Peek operations in the Lab.',
     iconName: 'FlaskConical',
     xpReward: 120,
     unlocked: false,
@@ -57,8 +57,8 @@ export const INITIAL_ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'quiz_ace',
-    title: 'Stack Master Grandmaster',
-    description: 'Score 100% on the final interactive Quiz.',
+    title: 'Queue Grandmaster',
+    description: 'Score 100% on the final interactive Queue Quiz.',
     iconName: 'Award',
     xpReward: 200,
     unlocked: false,
@@ -67,7 +67,7 @@ export const INITIAL_ACHIEVEMENTS: Achievement[] = [
   {
     id: 'streak_3',
     title: 'Daily Dedication',
-    description: 'Maintain a 3-day learning streak.',
+    description: 'Maintain a 3-day learning streak mastering Queue algorithms.',
     iconName: 'Flame',
     xpReward: 80,
     unlocked: false,
@@ -99,8 +99,8 @@ export const getInitialProgress = (): UserProgress => {
     awardedEventKeys: [],
     history: [
       {
-        title: 'Joined Stack Master',
-        description: 'Initialized DSA Interactive Learning Environment',
+        title: 'Joined Queue Master',
+        description: 'Initialized Queue & FIFO Interactive Learning Environment',
         xpEarned: 0,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       },

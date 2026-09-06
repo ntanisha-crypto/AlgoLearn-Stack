@@ -111,7 +111,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-extrabold text-slate-900 dark:text-white font-mono">L{progress.level}</span>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Stacker</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Queue Master</span>
           </div>
           <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full mt-3 overflow-hidden">
             <div className="h-full bg-blue-600 dark:bg-blue-500" style={{ width: `${xpPercent}%` }} />
@@ -157,7 +157,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
               Achievement Badges & Milestones
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Unlock badges by mastering DSA operations, challenges, and quizzes.
+              Unlock badges by mastering Queue operations, challenges, and quizzes.
             </p>
           </div>
         </div>
@@ -165,12 +165,12 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {INITIAL_ACHIEVEMENTS.map((badge) => {
             const isUnlocked = progress.awardedEventKeys.some((k) =>
-              (badge.id === 'first_push' && k === 'first_push_award') ||
-              (badge.id === 'lifo_master' && k === 'game_level_2_completed') ||
+              (badge.id === 'first_push' && (k === 'first_push_award' || k === 'first_enqueue_award')) ||
+              (badge.id === 'lifo_master' && (k === 'game_level_2_completed' || k === 'fifo_master_award')) ||
               (badge.id === 'overflow_explorer' && (k === 'lab_overflow_triggered' || k === 'lab_underflow_triggered')) ||
-              (badge.id === 'speed_demon' && k === 'game_level_6_completed') ||
-              (badge.id === 'debugger_pro' && k === 'game_level_5_completed') ||
-              (badge.id === 'lab_explorer' && (progress.totalPushes + progress.totalPops >= 10)) ||
+              (badge.id === 'speed_demon' && (k === 'game_level_6_completed' || k === 'speed_demon_award')) ||
+              (badge.id === 'debugger_pro' && (k === 'game_level_5_completed' || k === 'queue_guard_award')) ||
+              (badge.id === 'lab_explorer' && (progress.totalPushes + progress.totalPops >= 10 || (progress as any).totalEnqueues + (progress as any).totalDequeues >= 10)) ||
               (badge.id === 'quiz_ace' && progress.quizHighScore >= 75) ||
               (badge.id === 'streak_3' && progress.streakDays >= 3)
             );

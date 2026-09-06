@@ -2,15 +2,16 @@ import React, { useState } from 'react';
 import { Layers, ArrowUp, Plus, Trash2 } from 'lucide-react';
 
 interface AvailableElementsPaletteProps {
-  elements?: number[];
-  onSelectElement: (value: number, index?: number) => void;
+  elements?: (number | string)[];
+  onSelectElement: (value: number | string, index?: number) => void;
   onPopTop?: () => void;
   currentTopValue?: number | string | null;
   showPopAction?: boolean;
-  guidedTargetValue?: number;
+  guidedTargetValue?: number | string;
   isGuidedSolveActive?: boolean;
   disabled?: boolean;
   allowCustomInput?: boolean;
+  actionTypeLabel?: string;
 }
 
 export const AvailableElementsPalette: React.FC<AvailableElementsPaletteProps> = ({
@@ -22,18 +23,16 @@ export const AvailableElementsPalette: React.FC<AvailableElementsPaletteProps> =
   guidedTargetValue,
   isGuidedSolveActive = false,
   disabled = false,
-  allowCustomInput = true,
+  allowCustomInput = false,
+  actionTypeLabel = 'ENQUEUE',
 }) => {
   const [customValue, setCustomValue] = useState<string>('');
 
   const handleCustomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (disabled || !customValue.trim()) return;
-    const num = Number(customValue.trim());
-    if (!isNaN(num)) {
-      onSelectElement(num);
-      setCustomValue('');
-    }
+    onSelectElement(customValue.trim());
+    setCustomValue('');
   };
 
   return (

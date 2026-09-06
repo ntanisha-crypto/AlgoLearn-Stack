@@ -171,6 +171,22 @@ class SoundEffects {
       // Ignore
     }
   }
+
+  public playPeek() {
+    this.playClick();
+  }
+
+  public playReset() {
+    this.playClick();
+  }
+
+  public playEnqueue() {
+    this.playPush();
+  }
+
+  public playDequeue() {
+    this.playPop();
+  }
 }
 
 export const soundEffects = new SoundEffects();

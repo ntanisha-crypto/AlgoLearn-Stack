@@ -13,7 +13,7 @@ import {
   ArrowRight,
   Play,
   FlaskConical,
-  Lightbulb,
+  BookOpen,
 } from 'lucide-react';
 import { GameMetaData, GAME_CATALOG } from '../../data/gameMeta';
 import { UserProgress } from '../../types';
@@ -27,6 +27,7 @@ interface GameHubProps {
   onDirectContinue: (levelId: number) => void;
   onOpenGuidedSolve?: (levelId: number) => void;
   onOpenInGameLab?: () => void;
+  onOpenLearn?: () => void;
   onUpdateProgress?: (updated: UserProgress | ((prev: UserProgress) => UserProgress)) => void;
 }
 
@@ -38,6 +39,7 @@ export const GameHub: React.FC<GameHubProps> = ({
   onDirectContinue,
   onOpenGuidedSolve,
   onOpenInGameLab,
+  onOpenLearn,
   onUpdateProgress,
 }) => {
   const completedLevels = progress.completedGameLevels || [];
@@ -84,13 +86,33 @@ export const GameHub: React.FC<GameHubProps> = ({
   return (
     <div className="space-y-8 pb-16 max-w-5xl mx-auto animate-in fade-in duration-200">
       {/* ─── 1. SIMPLE GAME PAGE HEADER ─── */}
-      <div className="space-y-1.5 pb-2 border-b border-slate-200 dark:border-slate-800">
-        <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
-          GAME
-        </h1>
-        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">
-          Practice Stack concepts through interactive challenges.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+              Interactive DSA Simulator
+            </span>
+            <span className="text-xs font-mono text-slate-400 font-bold">
+              Learn → Practice → Master
+            </span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
+            QUEUE COMMAND CENTER
+          </h1>
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">
+            6-Level Queue Curriculum: Master FIFO, Enqueue, Dequeue, Peek, Capacity &amp; Overflow.
+          </p>
+        </div>
+
+        {onOpenLearn && (
+          <button
+            onClick={onOpenLearn}
+            className="px-4 py-2.5 rounded-xl text-xs font-bold border border-blue-300 dark:border-blue-700/80 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 text-blue-900 dark:text-blue-200 transition-all flex items-center gap-2 cursor-pointer shadow-2xs self-start sm:self-center"
+          >
+            <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <span>LEARN / CHEAT SHEET</span>
+          </button>
+        )}
       </div>
 
       {/* ─── 2. EXACTLY 6 GAME CARDS (2x3 Grid on Desktop/Tablet, 1-Col on Mobile) ─── */}
@@ -155,18 +177,6 @@ export const GameHub: React.FC<GameHubProps> = ({
                   {game.description}
                 </p>
 
-                {/* Example sequence inside Card 04 (Predict the Stack) */}
-                {game.id === 4 && (
-                  <div className="mb-4 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 font-mono text-xs text-blue-600 dark:text-blue-400 space-y-1">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 font-sans mb-1">
-                      Example Sequence:
-                    </div>
-                    <div>Push(10)</div>
-                    <div>Push(20)</div>
-                    <div>Pop()</div>
-                    <div>Push(30)</div>
-                  </div>
-                )}
               </div>
 
               {/* Card Footer: Metadata & Primary Action Button */}
@@ -190,49 +200,31 @@ export const GameHub: React.FC<GameHubProps> = ({
                   </span>
                 </div>
 
-                {/* Action Buttons: GUIDED SOLVE & PLAY GAME */}
-                <div className="flex items-center gap-2">
-                  {onOpenGuidedSolve && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        soundEffects.playClick();
-                        onOpenGuidedSolve(game.id);
-                      }}
-                      className="px-3 py-2.5 rounded-xl text-xs font-black uppercase tracking-wide transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-amber-300 dark:border-amber-700/80 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-200 active:scale-[0.99] shadow-2xs"
-                      title={`Open Guided Solve for Level ${game.levelNumber}`}
-                    >
-                      <Lightbulb className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                      <span className="hidden sm:inline">GUIDED SOLVE</span>
-                      <span className="sm:hidden">GUIDE</span>
-                    </button>
-                  )}
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      soundEffects.playClick();
-                      onDirectContinue(game.id);
-                    }}
-                    className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-[0.99] ${
-                      isCompleted
-                        ? 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700'
-                        : isInProgress
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20'
-                    }`}
-                  >
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                    <span>PLAY GAME</span>
-                  </button>
-                </div>
+                {/* Primary Action Button: PLAY GAME */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    soundEffects.playClick();
+                    onDirectContinue(game.id);
+                  }}
+                  className={`w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-[0.99] ${
+                    isCompleted
+                      ? 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700'
+                      : isInProgress
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20'
+                  }`}
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>PLAY GAME</span>
+                </button>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* ─── 3. STACK EXPERIMENT LAB CARD (Opens Lab in separate view/page when clicked) ─── */}
+      {/* ─── 3. QUEUE EXPERIMENT LAB CARD ─── */}
       <div className="pt-8 border-t border-slate-200 dark:border-slate-800">
         <div
           onClick={handleOpenLab}
@@ -252,21 +244,21 @@ export const GameHub: React.FC<GameHubProps> = ({
                 </span>
               </div>
               <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                STACK EXPERIMENT LAB
+                QUEUE EXPERIMENT LAB
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
-                Practice Stack operations interactively using Push, Pop, Peek, custom capacity resizing, and drag-and-drop.
+                Practice Queue operations interactively using Enqueue, Dequeue, Peek, dynamic capacity resizing, and real-time pointer tracking.
               </p>
 
               <div className="flex items-center gap-2 pt-2 flex-wrap text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                 <span className="bg-slate-50 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
-                  ⚡ Drag &amp; Drop
+                  ⚡ FIFO Enqueue &amp; Dequeue
                 </span>
                 <span className="bg-slate-50 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
-                  📏 Dynamic Capacity
+                  📏 Dynamic Bunker Capacity
                 </span>
                 <span className="bg-slate-50 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
-                  📜 Operation History
+                  👀 Non-Destructive Peek
                 </span>
               </div>
             </div>

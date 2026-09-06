@@ -11,7 +11,11 @@ export interface StackItem {
 export type OperationType =
   | 'PUSH'
   | 'POP'
+  | 'ENQUEUE'
+  | 'DEQUEUE'
   | 'PEEK'
+  | 'PEEK_FRONT'
+  | 'PEEK_REAR'
   | 'ISEMPTY'
   | 'ISFULL'
   | 'CLEAR'
@@ -21,8 +25,10 @@ export type OperationType =
   | 'SORT'
   | 'SEARCH'
   | 'ROTATE'
+  | 'CYCLE'
   | 'RESIZE'
-  | 'BATCH_PUSH';
+  | 'BATCH_PUSH'
+  | 'BATCH_ENQUEUE';
 
 export interface OperationLog {
   id: string;
@@ -80,7 +86,7 @@ export interface TheoryLesson {
   shortDesc: string;
   readTime: string;
   executiveDefinition?: string;
-  content: string;
+  content?: string;
   analogy?: {
     title: string;
     description: string;
@@ -93,7 +99,7 @@ export interface TheoryLesson {
   };
   criticalSpecifications?: string[];
   visualDiagram?: {
-    type: 'stack-ascii' | 'lifo-sequence' | 'before-after' | 'array-table' | 'linked-list' | 'brackets' | 'callstack' | 'maze' | 'browser' | 'comparison';
+    type: 'stack-ascii' | 'queue-ascii' | 'lifo-sequence' | 'fifo-sequence' | 'before-after' | 'array-table' | 'linked-list' | 'brackets' | 'callstack' | 'maze' | 'browser' | 'comparison' | 'complexity-table' | string;
     beforeState?: (string | number)[];
     afterState?: (string | number)[];
     operationLabel?: string;
@@ -130,7 +136,21 @@ export interface TheoryLesson {
     | 'callstack'
     | 'browser-history'
     | 'undo-redo'
-    | 'practice-problems';
+    | 'practice-problems'
+    | 'queue-sandbox'
+    | 'queue-fifo'
+    | 'queue-pointers'
+    | 'queue-enqueue'
+    | 'queue-dequeue'
+    | 'queue-circular'
+    | 'queue-linkedlist'
+    | 'queue-deque'
+    | 'queue-priority'
+    | 'queue-bfs'
+    | 'queue-complexity'
+    | 'queue-real-world'
+    | 'queue-diagram'
+    | 'queue-summary';
   practiceQuestions?: {
     question: string;
     options: string[];
@@ -157,14 +177,29 @@ export interface GameChallenge {
   id: string;
   challengeNumber: number;
   totalChallengesInLevel: number;
-  mode: 'pop' | 'push' | 'build' | 'predict' | 'debug' | 'speed';
+  mode:
+    | 'pop'
+    | 'push'
+    | 'build'
+    | 'predict'
+    | 'debug'
+    | 'speed'
+    | 'enqueue'
+    | 'dequeue'
+    | 'peek'
+    | 'overflow'
+    | 'underflow'
+    | 'choice'
+    | 'circular'
+    | 'priority'
+    | 'deque';
   difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
   question: string;
   instruction: string;
-  initialStack: number[];
-  availableElements?: number[];
-  targetStack?: number[];
-  targetValue?: number;
+  initialStack: (number | string)[];
+  availableElements?: (number | string)[];
+  targetStack?: (number | string)[];
+  targetValue?: number | string;
   capacity?: number;
   operationsTrace?: string[];
   debugSteps?: { id: string; text: string; isFaulty: boolean; errorType?: string; explanation: string }[];
@@ -180,9 +215,9 @@ export interface GameChallenge {
   };
   guidedSolve: {
     stepExplanation: string;
-    sourceValue?: number;
-    sourceType?: 'top' | 'available' | 'debug-step';
-    targetZone: 'pop-zone' | 'push-zone' | 'debug-zone';
+    sourceValue?: number | string;
+    sourceType?: 'top' | 'available' | 'debug-step' | 'front' | 'rear';
+    targetZone: 'pop-zone' | 'push-zone' | 'debug-zone' | 'dequeue-zone' | 'enqueue-zone';
     visualPathText: string;
   };
   feedback: {
@@ -192,6 +227,9 @@ export interface GameChallenge {
     incorrectTip: string;
   };
   xpReward: number;
+  choices?: { id: string; label: string; isCorrect: boolean; why: string }[];
+  peekTarget?: number | string;
+  expectedAction?: 'enqueue' | 'dequeue' | 'peek' | 'stop' | 'choice';
 }
 
 export interface GuidedSolveStep {
@@ -221,6 +259,8 @@ export interface GuidedSolveStep {
     | 'underflow-action'
     | 'overflow-action';
   pushValue?: number | string;
+  popExpectedValue?: number | string;
+  peekExpectedValue?: number | string;
   choices?: { id: string; label: string; isCorrect: boolean; feedback: string }[];
   correctChoiceId?: string;
   displayOutput?: (number | string)[];
@@ -256,7 +296,16 @@ export interface GameLevelConfig {
     | 'predict'
     | 'debug'
     | 'speed'
-    | 'master';
+    | 'master'
+    | 'queue_basics'
+    | 'enqueue_dequeue'
+    | 'front_rear_peek'
+    | 'capacity_overflow'
+    | 'empty_underflow'
+    | 'queue_master'
+    | 'circular_queue'
+    | 'priority_queue'
+    | 'deque';
   description: string;
   difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
   xpReward: number;
@@ -269,6 +318,7 @@ export interface GameLevelConfig {
 export interface QuizQuestion {
   id: number;
   type: 'multiple-choice' | 'predict-output' | 'true-false' | 'scenario' | 'drag-order';
+  difficulty?: 'Basic' | 'Intermediate' | 'Hard';
   question: string;
   codeSnippet?: string;
   options?: string[];

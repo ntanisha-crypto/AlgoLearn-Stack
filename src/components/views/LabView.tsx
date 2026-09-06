@@ -33,7 +33,7 @@ export const LabView: React.FC<LabViewProps> = ({
   progress,
   onUpdateProgress,
 }) => {
-  // Active selected lesson (1 for DATA STRUCTURE, 2 for STACK OPERATIONS)
+  // Active selected lesson (1 for DATA STRUCTURE, 2 for QUEUE OPERATIONS)
   const [selectedLessonId, setSelectedLessonId] = useState<number>(1);
   const [autoPlayTrigger, setAutoPlayTrigger] = useState<number>(0);
 
@@ -149,7 +149,7 @@ export const LabView: React.FC<LabViewProps> = ({
         onChange={handleUpload1}
         accept="video/mp4,video/webm,video/ogg,video/quicktime,video/*"
         className="hidden"
-        aria-label="Upload video for Lesson 01 Stack Data Structure"
+        aria-label="Upload video for Lesson 01 Queue Data Structure"
       />
       <input
         type="file"
@@ -157,7 +157,7 @@ export const LabView: React.FC<LabViewProps> = ({
         onChange={handleUpload2}
         accept="video/mp4,video/webm,video/ogg,video/quicktime,video/*"
         className="hidden"
-        aria-label="Upload video for Lesson 02 Stack Operations"
+        aria-label="Upload video for Lesson 02 Queue Operations"
       />
 
       {/* ─── VISUALIZE SECTION HEADING ─── */}
@@ -169,7 +169,7 @@ export const LabView: React.FC<LabViewProps> = ({
 
       {/* ─── TWO LESSON CARDS GRID ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
-        {/* ─── LESSON CARD 01: STACK DATA STRUCTURE ─── */}
+        {/* ─── LESSON CARD 01: QUEUE DATA STRUCTURE ─── */}
         <div
           onClick={() => handleLessonWatch(1)}
           className={`bg-white dark:bg-slate-900 rounded-3xl border p-6 sm:p-8 shadow-xs flex flex-col justify-between transition-all duration-200 cursor-pointer ${
@@ -186,7 +186,7 @@ export const LabView: React.FC<LabViewProps> = ({
                   LESSON 01
                 </span>
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 border border-blue-200/70 dark:border-blue-900/60">
-                  Stack Data Structure.mp4
+                  Queue Data Structure.mp4
                 </span>
               </div>
 
@@ -205,26 +205,26 @@ export const LabView: React.FC<LabViewProps> = ({
             {/* Lesson Title & Description */}
             <div>
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight uppercase">
-                STACK DATA STRUCTURE
+                QUEUE DATA STRUCTURE
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed font-normal">
-                Learn what a Stack is, understand the LIFO principle, and see how elements are organized and accessed through the TOP.
+                Learn what a Queue is, understand the FIFO principle, and see how elements enter at the REAR and leave through the FRONT.
               </p>
             </div>
 
             {/* Topic Chips */}
             <div className="flex flex-wrap gap-2 pt-1">
               <span className="text-xs font-medium px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70">
-                What is a Stack
+                What is a Queue
               </span>
               <span className="text-xs font-medium px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70">
-                LIFO
+                FIFO Principle
               </span>
               <span className="text-xs font-medium px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70">
-                TOP
+                FRONT &amp; REAR
               </span>
               <span className="text-xs font-medium px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70">
-                Stack Structure
+                Queue Pipeline
               </span>
             </div>
           </div>
@@ -248,7 +248,7 @@ export const LabView: React.FC<LabViewProps> = ({
           </div>
         </div>
 
-        {/* ─── LESSON CARD 02: STACK OPERATIONS ─── */}
+        {/* ─── LESSON CARD 02: QUEUE OPERATIONS ─── */}
         <div
           onClick={() => handleLessonWatch(2)}
           className={`bg-white dark:bg-slate-900 rounded-3xl border p-6 sm:p-8 shadow-xs flex flex-col justify-between transition-all duration-200 cursor-pointer ${
@@ -265,7 +265,7 @@ export const LabView: React.FC<LabViewProps> = ({
                   LESSON 02
                 </span>
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 border border-blue-200/70 dark:border-blue-900/60">
-                  Stack Operations.mp4
+                  Queue Operations.mp4
                 </span>
               </div>
 
@@ -284,32 +284,35 @@ export const LabView: React.FC<LabViewProps> = ({
             {/* Lesson Title & Description */}
             <div>
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight uppercase">
-                STACK OPERATIONS
+                TYPES OF QUEUES AND OPERATIONS
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed font-normal">
-                Understand how a stack stores elements using the LIFO principle and learn how push, pop, peek, and other stack operations work step by step.
+                Explore the 4 primary types of queues — Linear Queue, Circular Queue, Priority Queue, and Deque (Double-Ended Queue) — and learn how operations, memory reuse, and pointer mechanics differ in each variant.
               </p>
             </div>
 
             {/* Topic Chips */}
             <div className="flex flex-wrap gap-2 pt-1">
               <span className="text-xs font-medium px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70">
-                LIFO Principle
+                Linear Queue
               </span>
               <span className="text-xs font-medium px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70">
-                Push
+                Circular Queue
               </span>
               <span className="text-xs font-medium px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70">
-                Pop
+                Priority Queue
               </span>
               <span className="text-xs font-medium px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70">
-                Peek
+                Deque (Double-Ended)
               </span>
               <span className="text-xs font-medium px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70">
-                Stack Top
+                False Overflow Fix
               </span>
               <span className="text-xs font-medium px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70">
-                Overflow &amp; Underflow
+                Modulo Wraparound
+              </span>
+              <span className="text-xs font-medium px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70">
+                Bi-directional Ends
               </span>
             </div>
           </div>

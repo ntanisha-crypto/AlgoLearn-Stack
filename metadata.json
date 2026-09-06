@@ -1,6 +1,6 @@
 {
-  "name": "Stack Master",
-  "description": "AlgoLearn - YOUR DSA JOURNEY: Interactive Stack & DSA Learning Engine with a 12-chapter Theory curriculum, real-time visualizer lab, gamified challenges, and Quiz.",
+  "name": "Queue Master",
+  "description": "AlgoLearn - YOUR DSA JOURNEY: Interactive Queue & DSA Learning Engine with a 20-chapter Theory curriculum, FIFO principles, visual diagrams, and real-time operations.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

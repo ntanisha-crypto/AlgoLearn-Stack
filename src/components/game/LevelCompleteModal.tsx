@@ -68,6 +68,49 @@ export const LevelCompleteModal: React.FC<LevelCompleteModalProps> = ({
             ))}
           </div>
 
+          {/* Level 6 Specific Final Results Scorecard */}
+          {level.levelNumber === 6 && (
+            <div className="p-4 rounded-2xl bg-slate-900 text-slate-100 border border-slate-800 text-left font-mono text-xs space-y-2">
+              <div className="text-center font-bold uppercase tracking-widest text-amber-400 border-b border-slate-800 pb-1.5 text-[11px]">
+                🏆 FINAL RESULTS
+              </div>
+              <div className="space-y-1 text-slate-300 text-[11px] pt-1">
+                <div className="flex justify-between">
+                  <span>✅ ENQUEUE</span>
+                  <span className="font-bold text-emerald-400">3/3</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>✅ DEQUEUE</span>
+                  <span className="font-bold text-emerald-400">2/2</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>✅ PEEK</span>
+                  <span className="font-bold text-emerald-400">1/1</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>✅ FRONT / REAR</span>
+                  <span className="font-bold text-emerald-400">4/4</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>✅ OVERFLOW</span>
+                  <span className="font-bold text-emerald-400">1/1</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>✅ UNDERFLOW</span>
+                  <span className="font-bold text-emerald-400">1/1</span>
+                </div>
+              </div>
+              <div className="border-t border-slate-800 pt-2 text-center">
+                <span className="text-amber-300 font-black block text-xs">
+                  🎯 FIFO UNDERSTANDING: 100%
+                </span>
+                <span className="text-[10px] text-slate-400 font-sans tracking-wide uppercase font-bold">
+                  🏆 CERTIFIED QUEUE MASTER
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Stats Box */}
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 grid grid-cols-2 gap-4">
             <div>
