@@ -165,3 +165,4 @@ export const ChatbotLogo: React.FC<ChatbotLogoProps> = ({
     </div>
   );
 };
+

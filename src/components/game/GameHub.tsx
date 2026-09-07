@@ -115,9 +115,9 @@ export const GameHub: React.FC<GameHubProps> = ({
         )}
       </div>
 
-      {/* ─── 2. EXACTLY 6 GAME CARDS (2x3 Grid on Desktop/Tablet, 1-Col on Mobile) ─── */}
+      {/* ─── 2. 8 QUEUE ESCAPE GAME CARDS (2-Col Grid on Desktop/Tablet, 1-Col on Mobile) ─── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
-        {GAME_CATALOG.slice(0, 6).map((game) => {
+        {GAME_CATALOG.slice(0, 8).map((game) => {
           const isCompleted = completedLevels.includes(game.id);
           const isInProgress = !isCompleted && game.id === activeLevelId && currentChallengeIndex > 0;
           const formattedNumber = game.levelNumber < 10 ? `0${game.levelNumber}` : `${game.levelNumber}`;

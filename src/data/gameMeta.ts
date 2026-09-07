@@ -31,94 +31,94 @@ export interface GameMetaData {
 
 export const GAME_CATALOG: GameMetaData[] = [
   // ==========================================
-  // LEVEL 1: QUEUE BASICS
+  // LEVEL 1: BUILD THE QUEUE
   // ==========================================
   {
     id: 1,
     levelNumber: 1,
-    title: 'QUEUE BASICS',
-    shortTitle: 'Queue Basics',
-    subtitle: 'Understand FIFO, FRONT, REAR & SIZE',
-    tagline: 'New elements always join at the REAR of the queue.',
-    description: 'Understand FIFO, FRONT, REAR, and SIZE. Perform ENQUEUE operations to add survivors.',
+    title: 'LEVEL 1: BUILD THE QUEUE',
+    shortTitle: 'Build the Queue',
+    subtitle: 'People appear one by one: Enqueue visitors & identify who gets served next',
+    tagline: 'People appear one by one: A → B → C → D. Who will be served next?',
+    description: 'Amusement park entrance: Enqueue arriving visitors [A, B, C, D] and identify who gets served first under FIFO.',
     detailedObjective:
-      'Students see FRONT → A → B → C ← REAR with Queue Size: 3 / 5. Learn FIFO (First In, First Out), FRONT (first element), REAR (last element), ENQUEUE (add at REAR), and SIZE (number of elements).',
+      'Visitors arrive at the rollercoaster entrance one by one. Enqueue visitors A, B, C, D into the ride queue (FRONT → [A] [B] [C] [D] ← REAR). Master who gets served next (A at FRONT) and learn where new arrivals enter (REAR).',
     difficulty: 'Beginner',
     duration: '2–3 min',
     xpReward: 50,
-    skills: ['FIFO Principle', 'FRONT Pointer', 'REAR Pointer', 'ENQUEUE Operation', 'Queue Size'],
-    interactionType: 'ENQUEUE survivors at REAR',
+    skills: ['FIFO Principle', 'FRONT Pointer', 'REAR Pointer', 'ENQUEUE Operation', 'Who gets served next'],
+    interactionType: 'ENQUEUE visitors & identify FRONT',
     hintAvailability: '3-stage guided hints available',
     iconName: 'push',
     howToPlay: [
       {
         stepNumber: 1,
-        title: 'Inspect the Queue',
-        description: 'Observe FRONT → A → B → C ← REAR and notice the current Queue Size (3 / 5).',
+        title: 'Visitors Arrive at Entrance',
+        description: 'Visitors appear one by one: Alex (A), Bella (B), Chris (C), and Diana (D).',
       },
       {
         stepNumber: 2,
-        title: 'Identify the REAR',
-        description: 'New elements always enter at the REAR pointer of the queue.',
+        title: 'Click ENQUEUE to Add Them',
+        description: 'Click ENQUEUE to add each visitor to the REAR of the rollercoaster line.',
       },
       {
         stepNumber: 3,
-        title: 'Perform ENQUEUE',
-        description: 'Select survivor D and enqueue them at the REAR of the line.',
+        title: 'Who is Served Next?',
+        description: 'Select who will board the ride first: Alex (A) at FRONT because Alex arrived first!',
       },
       {
         stepNumber: 4,
-        title: 'Learn the WHY',
-        description: 'Discover why elements join at REAR and how Queue Size increases.',
+        title: 'Score Points',
+        description: 'Gain +10 points for every correct FIFO decision and protect your 3 lives.',
       },
     ],
     previewData: {
-      stackItems: ['A', 'B', 'C'],
-      topPointer: 'C',
+      stackItems: ['A', 'B', 'C', 'D'],
+      topPointer: 'A',
       popZoneLabel: 'ENQUEUE AT REAR',
     },
   },
 
   // ==========================================
-  // LEVEL 2: ENQUEUE & DEQUEUE
+  // LEVEL 2: SERVE THE CUSTOMER
   // ==========================================
   {
     id: 2,
     levelNumber: 2,
-    title: 'ENQUEUE & DEQUEUE',
-    shortTitle: 'Enqueue & Dequeue',
-    subtitle: 'How Elements Enter and Leave a Queue',
-    tagline: 'A entered first, so FIFO requires A to leave first.',
-    description: 'Learn how elements enter and leave a queue. Identify who leaves the bunker first.',
+    title: 'LEVEL 2: SERVE THE CUSTOMER',
+    shortTitle: 'Serve the Customer',
+    subtitle: 'Rollercoaster boarding: DEQUEUE from FRONT & master FIFO',
+    tagline: 'Customer A leaves the queue because A entered first!',
+    description: 'Board riders with DEQUEUE: Remove A from FRONT → [A] [B] [C] to get FRONT → [B] [C], proving First In, First Out.',
     detailedObjective:
-      'Starting queue: FRONT → A → B → C ← REAR. Determine who leaves first (A) and execute DEQUEUE. Master ENQUEUE → REAR, DEQUEUE → FRONT, and FIFO behavior.',
+      'A customer leaves the queue to board the ride. Click DEQUEUE to remove customer A from FRONT. Observe that B automatically advances to FRONT, illustrating the fundamental FIFO principle.',
     difficulty: 'Beginner',
     duration: '2–3 min',
     xpReward: 50,
-    skills: ['DEQUEUE Operation', 'FRONT Removal', 'FIFO Behavior', 'Queue Evolution'],
-    interactionType: 'Interactive DEQUEUE & ENQUEUE',
+    skills: ['DEQUEUE Operation', 'FRONT Boarding', 'FIFO Principle', 'Queue Advancement'],
+    interactionType: 'Interactive DEQUEUE & customer service',
     hintAvailability: '3-stage guided hints available',
     iconName: 'pop',
     howToPlay: [
       {
         stepNumber: 1,
-        title: 'Analyze First-In Order',
-        description: 'A entered before B and C, making A the element currently at the FRONT.',
+        title: 'Inspect FRONT Rider',
+        description: 'Customer A is at FRONT because A was the first to enter the line.',
       },
       {
         stepNumber: 2,
-        title: 'Execute DEQUEUE',
-        description: 'Click or drag survivor A to the Exit Zone to perform DEQUEUE.',
+        title: 'Click DEQUEUE to Serve',
+        description: 'Click DEQUEUE to let Customer A board the rollercoaster.',
       },
       {
         stepNumber: 3,
-        title: 'Observe FRONT Shift',
-        description: 'After A leaves, B automatically advances to become the new FRONT.',
+        title: 'Observe Next In Line',
+        description: 'Notice how Customer B advances to become the new FRONT.',
       },
       {
         stepNumber: 4,
-        title: 'Verify FIFO Invariant',
-        description: 'Review the educational explanation of First In, First Out processing.',
+        title: 'Understand the WHY',
+        description: 'A was removed because A entered first: the core definition of FIFO.',
       },
     ],
     previewData: {
@@ -129,220 +129,218 @@ export const GAME_CATALOG: GameMetaData[] = [
   },
 
   // ==========================================
-  // LEVEL 3: FRONT, REAR & PEEK
+  // LEVEL 3: RUSH HOUR
   // ==========================================
   {
     id: 3,
     levelNumber: 3,
-    title: 'FRONT, REAR & PEEK',
-    shortTitle: 'Front, Rear & Peek',
-    subtitle: 'Identify Queue Positions & Understand PEEK',
-    tagline: 'PEEK only looks at the first element. It does not change the queue.',
-    description: 'Identify who is at FRONT, who is at REAR, and what PEEK returns without removing.',
+    title: 'LEVEL 3: RUSH HOUR',
+    shortTitle: 'Rush Hour',
+    subtitle: 'Limited ride capacity (4): Handle rapid arrivals & detect QUEUE OVERFLOW',
+    tagline: 'Queue capacity = 4! When [A][B][C][D] is full and E arrives: 🚨 QUEUE OVERFLOW!',
+    description: 'Peak park hours: Queue has a limited capacity of 4. Prevent overflow and identify when the queue is full.',
     detailedObjective:
-      'Given FRONT → B → C → D ← REAR, identify FRONT (B), REAR (D), and inspect PEEK (B). Understand that PEEK views the FRONT without removing it.',
+      'Manage the ride during rush hour where queue capacity is strictly 4. When the queue contains [A, B, C, D] and customer E attempts to enter, detect QUEUE OVERFLOW and prevent buffer violations.',
     difficulty: 'Intermediate',
     duration: '3–4 min',
     xpReward: 75,
-    skills: ['PEEK Operation', 'Non-Destructive Access', 'FRONT Identification', 'REAR Identification'],
-    interactionType: 'Interactive Position Queries & PEEK inspection',
-    hintAvailability: '3-stage guided hints available',
-    iconName: 'predict',
-    howToPlay: [
-      {
-        stepNumber: 1,
-        title: 'Inspect Current Queue',
-        description: 'Examine the active queue state: FRONT → B → C → D ← REAR.',
-      },
-      {
-        stepNumber: 2,
-        title: 'Identify Boundary Pointers',
-        description: 'Confirm that B sits at FRONT (head) and D sits at REAR (tail).',
-      },
-      {
-        stepNumber: 3,
-        title: 'Click PEEK',
-        description: 'Trigger the PEEK operation to preview the FRONT element.',
-      },
-      {
-        stepNumber: 4,
-        title: 'Confirm Queue Invariance',
-        description: 'Notice that after PEEK, B remains in the queue completely unchanged.',
-      },
-    ],
-    previewData: {
-      stackItems: ['B', 'C', 'D'],
-      topPointer: 'B',
-      popZoneLabel: 'PEEK FRONT [B]',
-    },
-  },
-
-  // ==========================================
-  // LEVEL 4: CAPACITY & OVERFLOW
-  // ==========================================
-  {
-    id: 4,
-    levelNumber: 4,
-    title: 'CAPACITY & OVERFLOW',
-    shortTitle: 'Capacity & Overflow',
-    subtitle: 'Bunker Capacity Limits & Guardrails',
-    tagline: 'The queue has reached its maximum capacity (5/5). Detect OVERFLOW!',
-    description: 'Understand fixed-size queues and overflow when a new survivor arrives at full capacity.',
-    detailedObjective:
-      'Bunker Capacity is 5 / 5 (FRONT → A → B → C → D → E ← REAR). A new survivor F arrives. Test whether F can enter and understand Queue Overflow.',
-    difficulty: 'Intermediate',
-    duration: '3–4 min',
-    xpReward: 75,
-    skills: ['Queue Capacity', 'Queue Overflow', 'Boundary Conditions', 'Defensive Guardrails'],
-    interactionType: 'Overflow simulation & boundary decision',
+    skills: ['Queue Capacity', 'QUEUE OVERFLOW', 'isFull() Check', 'Enqueue Restrictions'],
+    interactionType: 'Overflow detection & capacity management',
     hintAvailability: '3-stage guided hints available',
     iconName: 'debug',
     howToPlay: [
       {
         stepNumber: 1,
-        title: 'Check Bunker Capacity',
-        description: 'Observe BUNKER CAPACITY: 5 / 5 with survivors A, B, C, D, and E.',
+        title: 'Check Ride Capacity',
+        description: 'The rollercoaster line can hold a maximum of 4 visitors at once.',
       },
       {
         stepNumber: 2,
-        title: 'Survivor F Arrives',
-        description: 'A new survivor F seeks shelter at the bunker entrance.',
+        title: 'Queue Fills to Capacity',
+        description: 'Visitors [A, B, C, D] fill all 4 available queue slots (4 / 4).',
       },
       {
         stepNumber: 3,
-        title: 'Choose ENQUEUE or STOP',
-        description: 'Decide whether F can legally enter or if insertion must be stopped.',
+        title: 'Visitor E Attempts to Enter',
+        description: 'Visitor E arrives at the entrance. The queue is completely full.',
       },
       {
         stepNumber: 4,
-        title: 'Trigger OVERFLOW Alert',
-        description: 'Experience the red OVERFLOW warning and learn the defensive programming rule.',
+        title: 'Detect QUEUE OVERFLOW',
+        description: 'Identify that the queue cannot accept new riders and trigger the Overflow guard (+20 pts).',
       },
     ],
     previewData: {
-      stackItems: ['A', 'B', 'C', 'D', 'E'],
-      topPointer: 'E',
-      popZoneLabel: 'CAPACITY FULL (5/5)',
+      stackItems: ['A', 'B', 'C', 'D'],
+      topPointer: 'D',
+      popZoneLabel: 'RIDE CAPACITY FULL (4/4)',
     },
   },
 
   // ==========================================
-  // LEVEL 5: EMPTY QUEUE & UNDERFLOW
+  // LEVEL 4: EMPTY STATION
   // ==========================================
   {
-    id: 5,
-    levelNumber: 5,
-    title: 'EMPTY QUEUE & UNDERFLOW',
-    shortTitle: 'Empty & Underflow',
-    subtitle: 'Removing from an Empty Queue',
-    tagline: 'There is no element at the FRONT to remove. Detect UNDERFLOW!',
-    description: 'Understand what happens when removing from an empty queue after all survivors leave.',
+    id: 4,
+    levelNumber: 4,
+    title: 'LEVEL 4: EMPTY STATION',
+    shortTitle: 'Empty Station',
+    subtitle: 'Drain queue to empty: Detect QUEUE UNDERFLOW exception',
+    tagline: 'When the line is EMPTY, attempting DEQUEUE triggers 🚨 QUEUE UNDERFLOW!',
+    description: 'All visitors have boarded the ride. Learn what happens when DEQUEUE is called on an empty queue.',
     detailedObjective:
-      'Start with FRONT → A → B ← REAR. Perform sequential Dequeues until QUEUE = EMPTY. Attempt another Dequeue to trigger and analyze UNDERFLOW.',
-    difficulty: 'Advanced',
-    duration: '3–5 min',
-    xpReward: 100,
-    skills: ['Queue Underflow', 'Empty State Guard', 'Boundary Checking', 'Pointer Resetting'],
-    interactionType: 'Sequential Dequeue & Underflow probe',
+      'Start with [A, B] waiting at the station. Perform DEQUEUE on A, then DEQUEUE on B until the station is EMPTY. Attempt another DEQUEUE to discover and diagnose the QUEUE UNDERFLOW error condition.',
+    difficulty: 'Intermediate',
+    duration: '3–4 min',
+    xpReward: 75,
+    skills: ['QUEUE UNDERFLOW', 'isEmpty() Check', 'Empty Station State', 'Defensive Guardrails'],
+    interactionType: 'Drain queue & underflow exception test',
     hintAvailability: '3-stage guided hints available',
     iconName: 'build',
     howToPlay: [
       {
         stepNumber: 1,
-        title: 'Start with 2 Survivors',
-        description: 'The bunker queue begins with FRONT → A → B ← REAR.',
+        title: 'Start with 2 Visitors',
+        description: 'The station line begins with [A, B] waiting to board.',
       },
       {
         stepNumber: 2,
-        title: 'Dequeue A and B',
-        description: 'Remove survivor A, then remove survivor B, leaving the queue empty.',
+        title: 'Serve A and B',
+        description: 'DEQUEUE Customer A, then DEQUEUE Customer B. The queue is now EMPTY (0 / 4).',
       },
       {
         stepNumber: 3,
-        title: 'Attempt Another Dequeue',
-        description: 'Try to remove another element when Queue Size is 0.',
+        title: 'Attempt Another DEQUEUE',
+        description: 'The ride operator tries to call DEQUEUE when no riders are present.',
       },
       {
         stepNumber: 4,
-        title: 'Trigger UNDERFLOW Alert',
-        description: 'Review the UNDERFLOW exception and learn why guard checks are essential.',
+        title: 'Catch QUEUE UNDERFLOW',
+        description: 'Trigger and understand the Underflow exception (+20 pts) preventing invalid memory access.',
       },
     ],
     previewData: {
       stackItems: ['A', 'B'],
       topPointer: 'A',
-      popZoneLabel: 'DRAIN & TRIGGER UNDERFLOW',
+      popZoneLabel: 'DRAIN & CATCH UNDERFLOW',
     },
   },
 
   // ==========================================
-  // LEVEL 6: QUEUE MASTER CHALLENGE
+  // LEVEL 5: PREDICT THE FUTURE
   // ==========================================
   {
-    id: 6,
-    levelNumber: 6,
-    title: 'QUEUE MASTER CHALLENGE',
-    shortTitle: 'Queue Master',
-    subtitle: 'Timed 30-Second DSA Challenge',
-    tagline: 'Execute Enqueue C, Enqueue D, Dequeue, Peek, Enqueue E, Dequeue before the buzzer!',
-    description: 'Combine everything learned in a timed 30-second DSA challenge with real-time queue updates.',
+    id: 5,
+    levelNumber: 5,
+    title: 'LEVEL 5: PREDICT THE FUTURE',
+    shortTitle: 'Predict the Future',
+    subtitle: 'Trace sequence of Enqueue/Dequeue operations: Predict who gets removed',
+    tagline: 'Trace the sequence: ENQUEUE A, B, DEQUEUE, ENQUEUE C, DEQUEUE. Who is removed?',
+    description: 'Mental queue execution! Trace interleaved arrivals and departures to predict who leaves the queue and who remains.',
     detailedObjective:
-      'Starting queue FRONT → A → B ← REAR. Follow rapid operations trace under a 30s timer and achieve 100% FIFO Understanding to become a QUEUE MASTER!',
+      'Given an operations sequence: ENQUEUE A → ENQUEUE B → DEQUEUE → ENQUEUE C → DEQUEUE. Predict the order in which riders exit (A → B) and who remains in the queue (C). Earn bonus points for accurate sequence forecasting.',
     difficulty: 'Advanced',
-    duration: '30 sec',
+    duration: '3–4 min',
     xpReward: 100,
-    skills: ['Timed Execution', 'Rapid Queue Tracing', 'FIFO Mastery', 'Compound Operations'],
-    interactionType: 'Rapid-fire timed action sequence',
+    skills: ['Sequence Prediction', 'Mental Tracing', 'Compound Operations', 'FIFO Verification'],
+    interactionType: 'Predictive sequence simulation & verification',
     hintAvailability: '3-stage guided hints available',
-    iconName: 'speed',
+    iconName: 'predict',
     howToPlay: [
       {
         stepNumber: 1,
-        title: 'Start 30s Timer',
-        description: 'Press Start when ready. The clock counts down from 30 seconds.',
+        title: 'Read the Operations Sequence',
+        description: 'Carefully inspect: ENQUEUE A, ENQUEUE B, DEQUEUE, ENQUEUE C, DEQUEUE.',
       },
       {
         stepNumber: 2,
-        title: 'Execute Required Operations',
-        description: 'Perform ENQUEUE C, ENQUEUE D, DEQUEUE, PEEK, ENQUEUE E, and DEQUEUE.',
+        title: 'Simulate Step-by-Step',
+        description: 'Trace the FRONT and REAR pointers mentally at each arrival and departure.',
       },
       {
         stepNumber: 3,
-        title: 'Watch Real-Time Updates',
-        description: 'Observe the queue layout dynamically update after every single operation.',
+        title: 'Predict Who is Removed',
+        description: 'Answer: Customer A leaves first, then Customer B leaves next (A → B).',
       },
       {
         stepNumber: 4,
-        title: 'Unlock Final Results',
-        description: 'Receive the 100% FIFO Understanding scorecard and QUEUE MASTER badge.',
+        title: 'Earn Bonus Points',
+        description: 'Collect prediction bonus points and verify your answer interactively!',
       },
     ],
     previewData: {
       operationsTrace: [
-        'START: A → B',
-        'ENQUEUE C → A → B → C',
-        'ENQUEUE D → A → B → C → D',
-        'DEQUEUE   → B → C → D',
-        'PEEK      → FRONT = B',
-        'ENQUEUE E → B → C → D → E',
-        'DEQUEUE   → C → D → E',
+        'ENQUEUE A → [A]',
+        'ENQUEUE B → [A, B]',
+        'DEQUEUE   → A removed, [B] remains',
+        'ENQUEUE C → [B, C]',
+        'DEQUEUE   → B removed, [C] remains',
       ],
-      stackItems: ['C', 'D', 'E'],
+      stackItems: ['C'],
       topPointer: 'C',
     },
   },
 
   // ==========================================
-  // LEVEL 7: CIRCULAR QUEUE & WRAPAROUND
+  // LEVEL 6: EMERGENCY CHALLENGE
+  // ==========================================
+  {
+    id: 6,
+    levelNumber: 6,
+    title: 'LEVEL 6: EMERGENCY CHALLENGE',
+    shortTitle: 'Emergency Challenge',
+    subtitle: 'Multi-Queue Management: 🚑 Fast Pass, 🎢 Ride Queue & 🍔 Food Queue',
+    tagline: 'Manage 3 separate queues simultaneously: Fast Pass / Emergency, Ride, and Food!',
+    description: 'Direct park guests to their intended queues and manage multiple lines independently under strict FIFO rules.',
+    detailedObjective:
+      'Amusement Park Multi-Queue Hub: Manage 3 separate queues simultaneously: 🚑 Emergency / Fast Pass, 🎢 Rollercoaster Ride, and 🍔 Food Queue. Route incoming visitors to their desired queues and serve each queue independently in FIFO order.',
+    difficulty: 'Advanced',
+    duration: '3–5 min',
+    xpReward: 120,
+    skills: ['Multi-Queue Architecture', 'Routing & Dispatch', 'Independent FIFO Invariants', 'Queue Separation'],
+    interactionType: 'Interactive Multi-Queue Dispatch & Service',
+    hintAvailability: '3-stage guided hints available',
+    iconName: 'speed',
+    howToPlay: [
+      {
+        stepNumber: 1,
+        title: 'Visitors Have Different Destinations',
+        description: 'Guests arrive looking for the Rollercoaster, the Food Bar, or Emergency Fast Pass.',
+      },
+      {
+        stepNumber: 2,
+        title: 'Route to the Correct Queue',
+        description: 'Enqueue each guest into their designated line without cross-contaminating queues.',
+      },
+      {
+        stepNumber: 3,
+        title: 'Serve Each Line in FIFO Order',
+        description: 'DEQUEUE from each queue independently: the first guest in that specific queue is served first!',
+      },
+      {
+        stepNumber: 4,
+        title: 'Become FIFO Champion',
+        description: 'Demonstrate that multiple queues can coexist independently in real-world systems!',
+      },
+    ],
+    previewData: {
+      stackItems: ['Ride: A, C', 'Food: B', 'Emergency: D'],
+      topPointer: 'Ride: A',
+      popZoneLabel: 'MULTI-QUEUE HUB',
+    },
+  },
+
+  // ==========================================
+  // LEVEL 7: RING COASTER (CIRCULAR QUEUE)
   // ==========================================
   {
     id: 7,
     levelNumber: 7,
-    title: 'CIRCULAR QUEUE & WRAPAROUND',
-    shortTitle: 'Circular Queue',
-    subtitle: 'Ring Buffer & Modulo Arithmetic',
-    tagline: 'rear = (rear + 1) % MAX reuses empty slots at the front of the array.',
-    description: 'Solve false overflow using ring buffers and modulo arithmetic (rear = (rear + 1) % MAX).',
+    title: 'LEVEL 7: RING COASTER',
+    shortTitle: 'Ring Coaster',
+    subtitle: 'Circular Queue: Reuse empty boarding seats using modulo arithmetic',
+    tagline: 'Wrap around using rear = (rear + 1) % MAX to recycle vacated seats at the front!',
+    description: 'Continuous circular ride boarding! Overcome false overflow by treating queue seats as a continuous ring buffer.',
     detailedObjective:
       'Understand how circular queues solve the false overflow problem by treating arrays as rings. Compute rear = (rear + 1) % MAX to recycle vacant front slots.',
     difficulty: 'Advanced',
@@ -355,23 +353,23 @@ export const GAME_CATALOG: GameMetaData[] = [
     howToPlay: [
       {
         stepNumber: 1,
-        title: 'Spot the False Overflow',
-        description: 'Observe empty slots [0, 1] while rear sits at index 4.',
+        title: 'Spot Vacant Front Seats',
+        description: 'Observe empty seats [0, 1] after earlier riders depart, while rear is at index 4.',
       },
       {
         stepNumber: 2,
         title: 'Apply Modulo Arithmetic',
-        description: 'Calculate (rear + 1) % 5 = (4 + 1) % 5 = 0 to wrap around.',
+        description: 'Calculate (rear + 1) % 5 = (4 + 1) % 5 = 0 to wrap around to index 0.',
       },
       {
         stepNumber: 3,
         title: 'Enqueue at Index 0',
-        description: 'Insert survivor F directly into the recycled slot [0].',
+        description: 'Seat rider F directly into the recycled seat [0].',
       },
       {
         stepNumber: 4,
-        title: 'Learn the Full Formula',
-        description: 'Master (rear + 1) % capacity == front sentinel condition.',
+        title: 'Master Ring Coaster Rule',
+        description: 'Learn why circular queues eliminate wasteful element shifting.',
       },
     ],
     previewData: {
@@ -382,50 +380,50 @@ export const GAME_CATALOG: GameMetaData[] = [
   },
 
   // ==========================================
-  // LEVEL 8: PRIORITY QUEUE & EMERGENCY TRIAGE
+  // LEVEL 8: VIP FASTPASS (PRIORITY QUEUE)
   // ==========================================
   {
     id: 8,
     levelNumber: 8,
-    title: 'PRIORITY QUEUE & EMERGENCY TRIAGE',
-    shortTitle: 'Priority Queue',
-    subtitle: 'Priority-Based Dequeue Order',
-    tagline: 'Highest priority (Priority 1) cuts to the FRONT regardless of arrival time.',
-    description: 'Master Priority Queues where elements are dequeued based on urgency rather than arrival order.',
+    title: 'LEVEL 8: VIP FASTPASS',
+    shortTitle: 'VIP FastPass',
+    subtitle: 'Priority Queue: Dispatch riders based on ticket priority over arrival time',
+    tagline: 'Priority 1 (VIP / Emergency) jumps to FRONT ahead of Priority 2 & 3!',
+    description: 'Priority Queue mechanics: Riders hold VIP tickets or medical priority that determine boarding precedence ahead of pure FIFO.',
     detailedObjective:
-      'Learn how priority queues diverge from pure arrival-time FIFO in emergency triage systems, prioritizing severe patients ahead of routine arrivals.',
+      'Learn how priority queues diverge from pure arrival-time FIFO in amusement park FastPass systems, prioritizing VIP and medical passes ahead of standard admission.',
     difficulty: 'Advanced',
     duration: '3–5 min',
     xpReward: 120,
-    skills: ['Priority Queue', 'Triage Sorting', 'Heap Fundamentals', 'Urgency Precedence'],
-    interactionType: 'Interactive triage sorting & emergency priority dequeue',
+    skills: ['Priority Queue', 'VIP Precedence', 'Heap Fundamentals', 'Urgency Sorting'],
+    interactionType: 'Interactive triage sorting & VIP priority dequeue',
     hintAvailability: '3-stage guided hints available',
     iconName: 'predict',
     howToPlay: [
       {
         stepNumber: 1,
-        title: 'Analyze Patient Priorities',
-        description: 'Identify patient urgency: Priority 1 (Critical) vs Priority 2 (Urgent) vs Priority 3 (Routine).',
+        title: 'Inspect Guest Priority Tiers',
+        description: 'Guests hold Priority 1 (VIP / Emergency), Priority 2 (Express Pass), or Priority 3 (Standard).',
       },
       {
         stepNumber: 2,
-        title: 'Observe Front Precedence',
-        description: 'Critical patient A cuts ahead of earlier arrivals to become the FRONT.',
+        title: 'VIP Guest Cuts to Front',
+        description: 'Priority 1 rider Alex cuts ahead of earlier arrivals to become the FRONT.',
       },
       {
         stepNumber: 3,
-        title: 'Dispatch Critical Patient',
-        description: 'Execute Dequeue to process Priority 1 first.',
+        title: 'Board Highest Priority First',
+        description: 'Execute DEQUEUE to board Priority 1 riders before general admission.',
       },
       {
         stepNumber: 4,
-        title: 'Observe Next In Line',
-        description: 'Watch Priority 2 advance to FRONT after Priority 1 clears.',
+        title: 'Complete Queue Master Certification',
+        description: 'Earn the FIFO Champion certification across all 8 challenge arenas!',
       },
     ],
     previewData: {
-      stackItems: ['A (P1)', 'C (P2)', 'B (P3)'],
-      topPointer: 'A (P1)',
+      stackItems: ['Alex (P1 VIP)', 'Chris (P2 Express)', 'Bella (P3 Standard)'],
+      topPointer: 'Alex (P1 VIP)',
       popZoneLabel: 'PRIORITY 1 DISPATCH',
     },
   },

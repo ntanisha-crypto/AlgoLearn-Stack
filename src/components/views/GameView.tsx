@@ -19,6 +19,7 @@ import { LearnCheatSheetModal } from '../game/LearnCheatSheetModal';
 import { InGameLab } from '../game/InGameLab';
 import { GuidedSolveModal } from '../game/GuidedSolveModal';
 import { LevelPedagogicalCard } from '../game/LevelPedagogicalCard';
+import { LevelMultiQueueInteractive } from '../game/LevelMultiQueueInteractive';
 import { LevelCircularInteractive } from '../game/LevelCircularInteractive';
 import { LevelPriorityInteractive } from '../game/LevelPriorityInteractive';
 import {
@@ -763,8 +764,8 @@ export const GameView: React.FC<GameViewProps> = ({
         isLastChallenge={currentChallengeIndex === challenges.length - 1}
       />
 
-      {/* 3.5 INTERACTIVE PEDAGOGICAL BLUEPRINT (LEVELS 1 - 6) */}
-      {currentChallenge && activeLevelId <= 6 && (
+      {/* 3.5 INTERACTIVE PEDAGOGICAL BLUEPRINT (LEVELS 1 - 5) */}
+      {currentChallenge && activeLevelId <= 5 && (
         <LevelPedagogicalCard
           levelId={activeLevelId}
           currentChallenge={currentChallenge}
@@ -773,6 +774,22 @@ export const GameView: React.FC<GameViewProps> = ({
           isPeeking={isPeeking}
           frontValue={frontValue}
           rearValue={rearValue}
+        />
+      )}
+
+      {/* 3.55 DEDICATED MULTI-QUEUE DISPATCH (LEVEL 6) */}
+      {activeLevelId === 6 && (
+        <LevelMultiQueueInteractive
+          onNotifyAction={(actionText) => {
+            setFeedbackActionText(actionText);
+          }}
+          onScoreChange={(delta, lifeLost) => {
+            if (lifeLost) {
+              setMistakes((m) => m + 1);
+            } else {
+              setEarnedXP((xp) => xp + delta);
+            }
+          }}
         />
       )}
 
